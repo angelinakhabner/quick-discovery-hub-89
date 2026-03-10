@@ -1,17 +1,18 @@
 import { useState, useCallback } from "react";
+import { Plus, Sparkles } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
 import AddFolderModal from "@/components/AddFolderModal";
-import { defaultFolders, getMockResults, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
+import { defaultFolders, getMockResults, type Folder, type TimeFilter } from "@/lib/mock-data";
 
 const Index = () => {
   const [folders, setFolders] = useState<Folder[]>(defaultFolders);
-  const [activeFolderId, setActiveFolderId] = useState<string>(defaultFolders[0].id);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const results = getMockResults(activeFolderId, activeFilter);
+  const results = activeFolderId ? getMockResults(activeFolderId, activeFilter) : [];
 
   const handleCreateFolder = useCallback((name: string, urls: string[]) => {
     const newFolder: Folder = {
@@ -29,25 +30,58 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 pt-8 pb-16">
-        {/* Brand */}
-        <h1 className="font-heading font-bold text-3xl text-foreground tracking-tight mb-8">
-          Whatsön
-        </h1>
+      <div className="max-w-2xl mx-auto px-4 pt-10 pb-16">
+        {/* Header */}
+        <header className="mb-10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <Sparkles size={28} className="text-primary" />
+              <h1 className="font-heading font-bold text-3xl tracking-tight text-foreground">
+                Whatsön
+              </h1>
+            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <Plus size={16} />
+              New folder
+            </button>
+          </div>
+          <p className="text-muted-foreground font-body text-sm">
+            Your curated event feed. Pick a folder to see what's on.
+          </p>
+        </header>
 
-        {/* Folder tabs */}
-        <FolderTabs
-          folders={folders}
-          activeFolderId={activeFolderId}
-          onSelect={setActiveFolderId}
-          onAddNew={() => setShowAddModal(true)}
-        />
+        {/* Folders */}
+        <section className="mb-8">
+          <p className="text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-3">
+            Folders
+          </p>
+          <FolderTabs
+            folders={folders}
+            activeFolderId={activeFolderId}
+            onSelect={(id) => setActiveFolderId(activeFolderId === id ? null : id)}
+            onAddNew={() => setShowAddModal(true)}
+          />
+        </section>
 
-        {/* Time filters */}
-        <TimeFilters active={activeFilter} onSelect={setActiveFilter} />
-
-        {/* Event list */}
-        <EventList results={results} />
+        {/* Content area */}
+        {activeFolderId ? (
+          <>
+            <TimeFilters active={activeFilter} onSelect={setActiveFilter} />
+            <EventList results={results} />
+          </>
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground font-body text-base mb-1">
+              Select a folder above to browse events
+            </p>
+            <p className="text-muted-foreground/60 font-body text-sm">
+              or create a new one with your own sources
+            </p>
+          </div>
+        )}
       </div>
 
       {showAddModal && (
