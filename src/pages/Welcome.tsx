@@ -6,7 +6,7 @@ const Welcome = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="max-w-xl mx-auto px-4 pt-16 pb-20 flex flex-col items-center text-center flex-1">
+      <div className="max-w-xl mx-auto px-5 pt-12 sm:pt-16 pb-12 sm:pb-20 flex flex-col items-center text-center flex-1">
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-10">
           <Sparkles size={32} className="text-primary" />

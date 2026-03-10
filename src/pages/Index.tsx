@@ -32,41 +32,45 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 pt-10 pb-16">
+      <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-10 pb-16">
         {/* Header */}
-        <header className="mb-10">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2.5">
-              <Sparkles size={28} className="text-primary" />
-              <h1 className="font-heading font-bold text-3xl tracking-tight text-foreground">
+        <header className="mb-6 sm:mb-10">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles size={22} className="text-primary sm:hidden" />
+              <Sparkles size={28} className="text-primary hidden sm:block" />
+              <h1 className="font-heading font-bold text-2xl sm:text-3xl tracking-tight text-foreground">
                 Whatsön
               </h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                <Plus size={16} />
-                New folder
+                <Plus size={14} className="sm:hidden" />
+                <Plus size={16} className="hidden sm:block" />
+                <span className="hidden sm:inline">New folder</span>
+                <span className="sm:hidden">New</span>
               </button>
               <button
                 onClick={signOut}
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Sign out"
               >
-                <LogOut size={18} />
+                <LogOut size={16} className="sm:hidden" />
+                <LogOut size={18} className="hidden sm:block" />
               </button>
             </div>
           </div>
-          <p className="text-muted-foreground font-body text-sm">
+          <p className="text-muted-foreground font-body text-xs sm:text-sm">
             Your curated event feed. Pick a folder to see what's on.
           </p>
         </header>
 
         {/* Folders */}
-        <section className="mb-8">
-          <p className="text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <section className="mb-6 sm:mb-8">
+          <p className="text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
             Folders
           </p>
           <FolderTabs
@@ -84,11 +88,11 @@ const Index = () => {
             <EventList results={results} />
           </>
         ) : (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground font-body text-base mb-1">
+          <div className="text-center py-12 sm:py-16">
+            <p className="text-muted-foreground font-body text-sm sm:text-base mb-1">
               Select a folder above to browse events
             </p>
-            <p className="text-muted-foreground/60 font-body text-sm">
+            <p className="text-muted-foreground/60 font-body text-xs sm:text-sm">
               or create a new one with your own sources
             </p>
           </div>
