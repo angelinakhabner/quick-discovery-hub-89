@@ -9,6 +9,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
@@ -22,6 +23,11 @@ const Auth = () => {
       if (error) {
         setMessage({ type: "error", text: error.message });
       } else {
+        if (rememberMe) {
+          localStorage.setItem("whatson_remember", email);
+        } else {
+          localStorage.removeItem("whatson_remember");
+        }
         navigate("/");
       }
     } else {
@@ -45,8 +51,17 @@ const Auth = () => {
     setLoading(false);
   };
 
+  // Load remembered email on mount
+  useState(() => {
+    const remembered = localStorage.getItem("whatson_remember");
+    if (remembered) {
+      setEmail(remembered);
+      setRememberMe(true);
+    }
+  });
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-5">
       <div className="w-full max-w-sm">
         {/* Brand */}
         <div className="flex items-center gap-2.5 mb-8 justify-center">
@@ -98,6 +113,19 @@ const Auth = () => {
               className="w-full px-4 py-2.5 text-sm bg-card text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
+
+          {/* Remember me */}
+          {isLogin && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-primary"
+              />
+              <span className="text-xs font-heading text-muted-foreground">Remember me</span>
+            </label>
+          )}
 
           {message && (
             <p className={`text-sm font-heading ${message.type === "error" ? "text-destructive" : "text-primary"}`}>
