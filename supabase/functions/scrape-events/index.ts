@@ -82,35 +82,33 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             url: formattedUrl,
-            formats: [
-              {
-                type: 'json',
-                schema: {
-                  type: 'object',
-                  properties: {
-                    events: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          title: { type: 'string' },
-                          time: { type: 'string', description: 'Start time in HH:MM format' },
-                          date: { type: 'string', description: 'Date in format like "10 marca" (Polish locale)' },
-                          description: { type: 'string', description: 'Brief description of the event' },
-                          director: { type: 'string' },
-                          cast: { type: 'string' },
-                          duration: { type: 'string', description: 'Duration like "120 min"' },
-                          genre: { type: 'string', description: 'Genre or category' },
-                        },
-                        required: ['title', 'time', 'date'],
+            formats: ['extract'],
+            extract: {
+              schema: {
+                type: 'object',
+                properties: {
+                  events: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        title: { type: 'string' },
+                        time: { type: 'string', description: 'Start time in HH:MM format' },
+                        date: { type: 'string', description: 'Date in format like "10 marca" (Polish locale)' },
+                        description: { type: 'string', description: 'Brief description of the event' },
+                        director: { type: 'string' },
+                        cast: { type: 'string' },
+                        duration: { type: 'string', description: 'Duration like "120 min"' },
+                        genre: { type: 'string', description: 'Genre or category' },
                       },
+                      required: ['title', 'time', 'date'],
                     },
                   },
-                  required: ['events'],
                 },
-                prompt: `Extract all events/shows/performances happening ${dateDescription}. Only include events within this date range. If no events match, return an empty array. For each event extract as much detail as possible.`,
+                required: ['events'],
               },
-            ],
+              prompt: `Extract all events/shows/performances happening ${dateDescription}. Only include events within this date range. If no events match, return an empty array. For each event extract as much detail as possible.`,
+            },
             onlyMainContent: true,
             waitFor: 3000,
           }),
@@ -124,7 +122,7 @@ Deno.serve(async (req) => {
         }
 
         // Extract events from response, adding venue and source info
-        const jsonData = data?.data?.json || data?.json;
+        const jsonData = data?.data?.extract || data?.extract || data?.data?.json || data?.json;
         const events: ScrapedEvent[] = (jsonData?.events || []).map((evt: any) => ({
           title: evt.title || 'Untitled',
           time: evt.time || '—',
