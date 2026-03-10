@@ -32,8 +32,17 @@ const leisureSources: Source[] = [
 export const defaultFolders: Folder[] = [
   {
     id: "leisure",
-    name: "Leisure in Warsaw",
+    name: "leisure",
     sources: leisureSources,
+  },
+  {
+    id: "ngo-jobs",
+    name: "jobs in NGO's",
+    sources: [
+      { url: "pracuj.pl", name: "Pracuj.pl" },
+      { url: "ngo.pl/praca", name: "NGO.pl Praca" },
+      { url: "idealist.org", name: "Idealist" },
+    ],
   },
 ];
 
