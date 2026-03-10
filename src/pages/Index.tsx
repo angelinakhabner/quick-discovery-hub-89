@@ -8,13 +8,14 @@ import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, getMockResults, type Folder, type TimeFilter } from "@/lib/mock-data";
 
 const Index = () => {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [folders, setFolders] = useState<Folder[]>(defaultFolders);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
 
   const results = activeFolderId ? getMockResults(activeFolderId, activeFilter) : [];
+  const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "there";
 
   const handleCreateFolder = useCallback((name: string, urls: string[]) => {
     const newFolder: Folder = {
@@ -64,7 +65,7 @@ const Index = () => {
             </div>
           </div>
           <p className="text-muted-foreground font-body text-xs sm:text-sm">
-            Your curated event feed. Pick a folder to see what's on.
+            Welcome back, <span className="text-foreground font-medium">{displayName}</span> 👋
           </p>
         </header>
 
