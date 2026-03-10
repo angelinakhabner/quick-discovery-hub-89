@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
         }
 
         // Extract events from response, adding venue and source info
-        const jsonData = data?.data?.json || data?.json;
+        const jsonData = data?.data?.extract || data?.extract || data?.data?.json || data?.json;
         const events: ScrapedEvent[] = (jsonData?.events || []).map((evt: any) => ({
           title: evt.title || 'Untitled',
           time: evt.time || '—',
