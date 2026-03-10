@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, LogOut } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
+import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, getMockResults, type Folder, type TimeFilter } from "@/lib/mock-data";
 
