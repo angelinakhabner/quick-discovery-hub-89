@@ -8,6 +8,7 @@ import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, getMockResults, type Folder, type TimeFilter } from "@/lib/mock-data";
 
 const Index = () => {
+  const { signOut } = useAuth();
   const [folders, setFolders] = useState<Folder[]>(defaultFolders);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
