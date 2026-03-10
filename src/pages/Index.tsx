@@ -1,11 +1,13 @@
-import { useState, useCallback } from "react";
-import { Plus, Sparkles, LogOut } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
 import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
-import { defaultFolders, getMockResults, type Folder, type TimeFilter } from "@/lib/mock-data";
+import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
+import { scrapeEvents } from "@/lib/api/scrape-events";
+import { toast } from "sonner";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -13,9 +15,63 @@ const Index = () => {
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [results, setResults] = useState<ResultItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const results = activeFolderId ? getMockResults(activeFolderId, activeFilter) : [];
+  // Cache: folderId-filter -> results
+  const cache = useRef<Record<string, ResultItem[]>>({});
+
   const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "there";
+
+  const activeFolder = folders.find((f) => f.id === activeFolderId);
+
+  const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
+    const cacheKey = `${folder.id}-${filter}`;
+    if (cache.current[cacheKey]) {
+      setResults(cache.current[cacheKey]);
+      return;
+    }
+
+    setIsLoading(true);
+    setResults([]);
+
+    try {
+      const response = await scrapeEvents(folder.sources, filter);
+      if (response.success && response.data) {
+        cache.current[cacheKey] = response.data;
+        setResults(response.data);
+      } else {
+        toast.error(response.error || "Failed to fetch events");
+        setResults([]);
+      }
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      toast.error("Failed to fetch events. Please try again.");
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleFolderSelect = useCallback((id: string) => {
+    if (activeFolderId === id) {
+      setActiveFolderId(null);
+      setResults([]);
+      return;
+    }
+    setActiveFolderId(id);
+    const folder = folders.find((f) => f.id === id);
+    if (folder) {
+      fetchResults(folder, activeFilter);
+    }
+  }, [activeFolderId, folders, activeFilter, fetchResults]);
+
+  const handleFilterSelect = useCallback((filter: TimeFilter) => {
+    setActiveFilter(filter);
+    if (activeFolder) {
+      fetchResults(activeFolder, filter);
+    }
+  }, [activeFolder, fetchResults]);
 
   const handleCreateFolder = useCallback((name: string, urls: string[]) => {
     const newFolder: Folder = {
@@ -29,7 +85,8 @@ const Index = () => {
     setFolders((prev) => [...prev, newFolder]);
     setActiveFolderId(newFolder.id);
     setShowAddModal(false);
-  }, []);
+    fetchResults(newFolder, activeFilter);
+  }, [activeFilter, fetchResults]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,7 +134,7 @@ const Index = () => {
           <FolderTabs
             folders={folders}
             activeFolderId={activeFolderId}
-            onSelect={(id) => setActiveFolderId(activeFolderId === id ? null : id)}
+            onSelect={handleFolderSelect}
             onAddNew={() => setShowAddModal(true)}
           />
         </section>
@@ -85,8 +142,17 @@ const Index = () => {
         {/* Content area */}
         {activeFolderId ? (
           <>
-            <TimeFilters active={activeFilter} onSelect={setActiveFilter} />
-            <EventList results={results} />
+            <TimeFilters active={activeFilter} onSelect={handleFilterSelect} />
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
+                <Loader2 size={24} className="text-primary animate-spin" />
+                <p className="text-muted-foreground font-body text-sm">
+                  Scanning {activeFolder?.sources.length} source{activeFolder && activeFolder.sources.length !== 1 ? "s" : ""}…
+                </p>
+              </div>
+            ) : (
+              <EventList results={results} />
+            )}
           </>
         ) : (
           <div className="text-center py-12 sm:py-16">
