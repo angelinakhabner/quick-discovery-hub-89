@@ -25,7 +25,7 @@ const EventList = ({ results }: EventListProps) => {
           <div key={`${item.title}-${item.time}-${i}`} className="border-b border-border">
             {/* Main row */}
             <div
-              className="flex items-center gap-3 py-3 cursor-pointer group"
+              className="flex items-center gap-2 sm:gap-3 py-3 cursor-pointer group"
               onClick={() => setExpandedIndex(isOpen ? null : i)}
             >
               {/* Expand toggle */}
@@ -35,23 +35,23 @@ const EventList = ({ results }: EventListProps) => {
               />
 
               {/* Title */}
-              <span className="text-foreground font-body font-medium text-base min-w-0 flex-1">
+              <span className="text-foreground font-body font-medium text-sm sm:text-base min-w-0 flex-1 truncate">
                 {item.title}
               </span>
 
-              {/* Genre badge */}
+              {/* Genre badge - desktop only */}
               {item.genre && (
-                <span className="text-xs font-heading text-muted-foreground bg-muted px-2 py-0.5 rounded-full whitespace-nowrap hidden sm:inline">
+                <span className="text-xs font-heading text-muted-foreground bg-muted px-2 py-0.5 rounded-full whitespace-nowrap hidden md:inline">
                   {item.genre}
                 </span>
               )}
 
               {/* Time */}
-              <span className="text-foreground font-heading text-sm font-medium whitespace-nowrap">
+              <span className="text-foreground font-heading text-xs sm:text-sm font-medium whitespace-nowrap">
                 {item.time}
               </span>
 
-              {/* Venue */}
+              {/* Venue - desktop only */}
               <span className="text-muted-foreground font-heading text-sm whitespace-nowrap hidden sm:inline">
                 {item.venue}
               </span>
@@ -62,24 +62,36 @@ const EventList = ({ results }: EventListProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 px-3 py-1 text-xs font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 sm:px-3 py-1 text-xs font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
               >
-                Reserve
-                <ExternalLink size={10} />
+                <span className="hidden sm:inline">Reserve</span>
+                <ExternalLink size={10} className="sm:hidden" />
+                <ExternalLink size={10} className="hidden sm:block" />
               </a>
             </div>
 
             {/* Expanded details */}
             {isOpen && (
-              <div className="pl-8 pr-4 pb-5 crossfade-enter">
+              <div className="pl-6 sm:pl-8 pr-2 sm:pr-4 pb-4 sm:pb-5 crossfade-enter">
+                {/* Mobile: venue + genre row */}
+                <div className="flex items-center gap-2 mb-2 sm:hidden">
+                  <span className="text-xs font-heading text-muted-foreground">{item.venue}</span>
+                  {item.genre && (
+                    <>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-xs font-heading text-muted-foreground">{item.genre}</span>
+                    </>
+                  )}
+                </div>
+
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                   {/* Description */}
-                  <p className="text-sm font-body text-foreground/80 leading-relaxed">
+                  <p className="text-xs sm:text-sm font-body text-foreground/80 leading-relaxed">
                     {item.description || "No description available."}
                   </p>
 
                   {/* Meta column */}
-                  <div className="text-xs font-heading space-y-1.5 text-muted-foreground sm:text-right sm:min-w-[160px]">
+                  <div className="text-xs font-heading space-y-1 sm:space-y-1.5 text-muted-foreground sm:text-right sm:min-w-[160px]">
                     {item.director && (
                       <p>
                         <span className="font-medium text-foreground">Dir.</span> {item.director}
@@ -98,7 +110,7 @@ const EventList = ({ results }: EventListProps) => {
                     <p>
                       <span className="font-medium text-foreground">Date:</span> {item.date}
                     </p>
-                    <p>
+                    <p className="hidden sm:block">
                       <span className="font-medium text-foreground">Venue:</span> {item.venue}
                     </p>
                   </div>
