@@ -1,17 +1,17 @@
 import { useState, useCallback } from "react";
-import HeroCard from "@/components/HeroCard";
-import FolderDetail from "@/components/FolderDetail";
+import FolderTabs from "@/components/FolderTabs";
+import TimeFilters from "@/components/TimeFilters";
+import EventList from "@/components/EventList";
 import AddFolderModal from "@/components/AddFolderModal";
-import { defaultFolders, type Folder } from "@/lib/mock-data";
+import { defaultFolders, getMockResults, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
 
 const Index = () => {
   const [folders, setFolders] = useState<Folder[]>(defaultFolders);
-  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  const [activeFolderId, setActiveFolderId] = useState<string>(defaultFolders[0].id);
+  const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const handleFolderClick = useCallback((folderId: string) => {
-    setActiveFolderId((prev) => (prev === folderId ? null : folderId));
-  }, []);
+  const results = getMockResults(activeFolderId, activeFilter);
 
   const handleCreateFolder = useCallback((name: string, urls: string[]) => {
     const newFolder: Folder = {
@@ -23,34 +23,33 @@ const Index = () => {
       })),
     };
     setFolders((prev) => [...prev, newFolder]);
+    setActiveFolderId(newFolder.id);
     setShowAddModal(false);
   }, []);
 
-  const activeFolder = folders.find((f) => f.id === activeFolderId);
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 pt-6 pb-12 sm:pt-10">
-        {/* Hero */}
-        <HeroCard
+      <div className="max-w-2xl mx-auto px-4 pt-8 pb-16">
+        {/* Brand */}
+        <h1 className="font-heading font-bold text-3xl text-foreground tracking-tight mb-8">
+          Whatsön
+        </h1>
+
+        {/* Folder tabs */}
+        <FolderTabs
           folders={folders}
-          onFolderClick={handleFolderClick}
-          onAddMore={() => setShowAddModal(true)}
           activeFolderId={activeFolderId}
+          onSelect={setActiveFolderId}
+          onAddNew={() => setShowAddModal(true)}
         />
 
-        {/* Folder detail section */}
-        {activeFolder && (
-          <div className="mt-6">
-            <FolderDetail
-              folder={activeFolder}
-              onBack={() => setActiveFolderId(null)}
-            />
-          </div>
-        )}
+        {/* Time filters */}
+        <TimeFilters active={activeFilter} onSelect={setActiveFilter} />
+
+        {/* Event list */}
+        <EventList results={results} />
       </div>
 
-      {/* Add folder modal */}
       {showAddModal && (
         <AddFolderModal
           onCreateFolder={handleCreateFolder}
