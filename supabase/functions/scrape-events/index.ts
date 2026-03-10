@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
               prompt: `Extract all events/shows/performances happening ${dateDescription}. Only include events within this date range. If no events match, return an empty array. For each event extract as much detail as possible.`,
             },
             onlyMainContent: true,
-            waitFor: 3000,
+            waitFor: 5000,
           }),
         });
 

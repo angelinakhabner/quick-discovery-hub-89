@@ -26,13 +26,14 @@ export type ResultItem = {
 
 const leisureSources: Source[] = [
   { url: "kinomuranow.pl/repertuar", name: "Kino Muranów" },
-  { url: "kinoteka.pl", name: "Kinoteka" },
-  { url: "iluzjon.fn.org.pl", name: "Kino Iluzjon" },
-  { url: "teatrpowszechny.pl", name: "Teatr Powszechny" },
-  { url: "teatrdramatyczny.pl", name: "Teatr Dramatyczny" },
-  { url: "teatr-zydowski.pl", name: "Teatr Żydowski" },
-  { url: "klubkomediowy.pl", name: "Klub Komediowy" },
-  { url: "jassmine.pl", name: "Jassmine Jazz Club" },
+  { url: "kinoteka.pl/repertuar/", name: "Kinoteka" },
+  { url: "iluzjon.fn.org.pl/repertuar/", name: "Kino Iluzjon" },
+  { url: "teatrdramatyczny.pl/repertuar", name: "Teatr Dramatyczny" },
+  // Broken/unavailable sources:
+  // { url: "teatrpowszechny.pl", name: "Teatr Powszechny" },  // times out
+  // { url: "teatr-zydowski.pl", name: "Teatr Żydowski" },     // fails to scrape
+  // { url: "klubkomediowy.pl", name: "Klub Komediowy" },       // fails to scrape
+  // { url: "jassmine.pl", name: "Jassmine Jazz Club" },        // domain parked
 ];
 
 export const defaultFolders: Folder[] = [
