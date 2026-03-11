@@ -99,7 +99,7 @@ const EventList = ({ results }: EventListProps) => {
                     )}
                     {item.cast && (
                       <p>
-                        <span className="font-medium text-foreground">Cast:</span> {item.cast}
+                        <span className="font-medium text-foreground">Obsada:</span> {item.cast}
                       </p>
                     )}
                     {item.duration && (
