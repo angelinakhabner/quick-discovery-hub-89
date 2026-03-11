@@ -63,7 +63,7 @@ const ResultsList = ({ results, folderName, filter, onClose }: ResultsListProps)
 
       {results.length === 0 && (
         <p className="text-muted-foreground font-body text-center py-8">
-          Nothing found for this timeframe.
+          Nic nie znaleziono w tym terminie.
         </p>
       )}
     </div>
