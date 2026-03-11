@@ -8,9 +8,9 @@ interface ResultsListProps {
 }
 
 const filterLabels: Record<TimeFilter, string> = {
-  today: "Today",
-  tomorrow: "Tomorrow",
-  next3days: "Next 3 days",
+  today: "Dziś",
+  tomorrow: "Jutro",
+  next3days: "Najbliższe 3 dni",
 };
 
 const ResultsList = ({ results, folderName, filter, onClose }: ResultsListProps) => {
@@ -63,7 +63,7 @@ const ResultsList = ({ results, folderName, filter, onClose }: ResultsListProps)
 
       {results.length === 0 && (
         <p className="text-muted-foreground font-body text-center py-8">
-          Nothing found for this timeframe.
+          Nic nie znaleziono w tym terminie.
         </p>
       )}
     </div>

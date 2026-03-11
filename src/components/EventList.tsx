@@ -12,7 +12,7 @@ const EventList = ({ results }: EventListProps) => {
   if (results.length === 0) {
     return (
       <p className="text-muted-foreground font-body text-center py-12">
-        Nothing found for this timeframe.
+        Nic nie znaleziono w tym terminie.
       </p>
     );
   }
@@ -64,7 +64,7 @@ const EventList = ({ results }: EventListProps) => {
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1 px-2.5 sm:px-3 py-1 text-xs font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
               >
-                <span className="hidden sm:inline">Reserve</span>
+                <span className="hidden sm:inline">Rezerwuj</span>
                 <ExternalLink size={10} className="sm:hidden" />
                 <ExternalLink size={10} className="hidden sm:block" />
               </a>
@@ -87,31 +87,31 @@ const EventList = ({ results }: EventListProps) => {
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                   {/* Description */}
                   <p className="text-xs sm:text-sm font-body text-foreground/80 leading-relaxed">
-                    {item.description || "No description available."}
+                    {item.description || "Brak opisu."}
                   </p>
 
                   {/* Meta column */}
                   <div className="text-xs font-heading space-y-1 sm:space-y-1.5 text-muted-foreground sm:text-right sm:min-w-[160px]">
                     {item.director && (
                       <p>
-                        <span className="font-medium text-foreground">Dir.</span> {item.director}
+                        <span className="font-medium text-foreground">Reż.</span> {item.director}
                       </p>
                     )}
                     {item.cast && (
                       <p>
-                        <span className="font-medium text-foreground">Cast:</span> {item.cast}
+                        <span className="font-medium text-foreground">Obsada:</span> {item.cast}
                       </p>
                     )}
                     {item.duration && (
                       <p>
-                        <span className="font-medium text-foreground">Duration:</span> {item.duration}
+                        <span className="font-medium text-foreground">Czas trwania:</span> {item.duration}
                       </p>
                     )}
                     <p>
-                      <span className="font-medium text-foreground">Date:</span> {item.date}
+                      <span className="font-medium text-foreground">Data:</span> {item.date}
                     </p>
                     <p className="hidden sm:block">
-                      <span className="font-medium text-foreground">Venue:</span> {item.venue}
+                      <span className="font-medium text-foreground">Miejsce:</span> {item.venue}
                     </p>
                   </div>
                 </div>

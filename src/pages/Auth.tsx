@@ -75,13 +75,13 @@ const Auth = () => {
           {!isLogin && (
             <div>
               <label className="block text-xs font-heading font-medium text-muted-foreground mb-1">
-                Display name
+                Nazwa wyświetlana
               </label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your name"
+                placeholder="Twoje imię"
                 className="w-full px-4 py-2.5 text-sm bg-card text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
@@ -123,7 +123,7 @@ const Auth = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-primary"
               />
-              <span className="text-xs font-heading text-muted-foreground">Remember me</span>
+              <span className="text-xs font-heading text-muted-foreground">Zapamiętaj mnie</span>
             </label>
           )}
 
@@ -138,17 +138,17 @@ const Auth = () => {
             disabled={loading}
             className="w-full py-2.5 text-sm font-heading font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {loading ? "…" : isLogin ? "Sign in" : "Create account"}
+            {loading ? "…" : isLogin ? "Zaloguj się" : "Utwórz konto"}
           </button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground font-heading mt-6">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          {isLogin ? "Nie masz konta?" : "Masz już konto?"}{" "}
           <button
             onClick={() => { setIsLogin(!isLogin); setMessage(null); }}
             className="text-primary hover:underline font-medium"
           >
-            {isLogin ? "Sign up" : "Sign in"}
+            {isLogin ? "Zarejestruj się" : "Zaloguj się"}
           </button>
         </p>
       </div>

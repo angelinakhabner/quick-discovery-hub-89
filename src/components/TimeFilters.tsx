@@ -6,9 +6,9 @@ interface TimeFiltersProps {
 }
 
 const buttons: { label: string; shortLabel: string; value: TimeFilter }[] = [
-  { label: "Today", shortLabel: "Today", value: "today" },
-  { label: "Tomorrow", shortLabel: "Tmrw", value: "tomorrow" },
-  { label: "Next 3 days", shortLabel: "3 days", value: "next3days" },
+  { label: "Dziś", shortLabel: "Dziś", value: "today" },
+  { label: "Jutro", shortLabel: "Jutro", value: "tomorrow" },
+  { label: "Najbliższe 3 dni", shortLabel: "3 dni", value: "next3days" },
 ];
 
 const TimeFilters = ({ active, onSelect }: TimeFiltersProps) => {
