@@ -104,7 +104,7 @@ const EventList = ({ results }: EventListProps) => {
                     )}
                     {item.duration && (
                       <p>
-                        <span className="font-medium text-foreground">Duration:</span> {item.duration}
+                        <span className="font-medium text-foreground">Czas trwania:</span> {item.duration}
                       </p>
                     )}
                     <p>
