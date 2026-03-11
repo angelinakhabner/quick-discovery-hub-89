@@ -147,7 +147,7 @@ const Index = () => {
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
                 <Loader2 size={24} className="text-primary animate-spin" />
                 <p className="text-muted-foreground font-body text-sm">
-                  Scanning {activeFolder?.sources.length} source{activeFolder && activeFolder.sources.length !== 1 ? "s" : ""}…
+                  Przeszukuję {activeFolder?.sources.length} źródeł…
                 </p>
               </div>
             ) : (
