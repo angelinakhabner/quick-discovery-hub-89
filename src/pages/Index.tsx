@@ -129,7 +129,7 @@ const Index = () => {
         {/* Folders */}
         <section className="mb-6 sm:mb-8">
           <p className="text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
-            Folders
+            Foldery
           </p>
           <FolderTabs
             folders={folders}
