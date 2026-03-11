@@ -35,7 +35,7 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Jazz in Warsaw"
+              placeholder="np. Jazz w Warszawie"
               autoFocus
               className="w-full px-4 py-3 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
