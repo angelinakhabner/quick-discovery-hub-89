@@ -12,7 +12,7 @@ const EventList = ({ results }: EventListProps) => {
   if (results.length === 0) {
     return (
       <p className="text-muted-foreground font-body text-center py-12">
-        Nothing found for this timeframe.
+        Nic nie znaleziono w tym terminie.
       </p>
     );
   }
