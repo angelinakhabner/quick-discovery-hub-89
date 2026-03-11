@@ -123,7 +123,7 @@ const Auth = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-primary"
               />
-              <span className="text-xs font-heading text-muted-foreground">Remember me</span>
+              <span className="text-xs font-heading text-muted-foreground">Zapamiętaj mnie</span>
             </label>
           )}
 
