@@ -23,7 +23,7 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm">
       <div className="bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl crossfade-enter">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-heading font-bold text-xl text-card-foreground">New folder</h2>
+          <h2 className="font-heading font-bold text-xl text-card-foreground">Nowy folder</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
