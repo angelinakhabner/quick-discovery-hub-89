@@ -22,7 +22,7 @@ const Index = () => {
   const [results, setResults] = useState<ResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [afterTime, setAfterTime] = useState("");
-  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
 
   // Cache: folderId-filter -> results
