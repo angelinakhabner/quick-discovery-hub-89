@@ -24,7 +24,7 @@ const EventList = ({ results }: EventListProps) => {
 
   if (results.length === 0) {
     return (
-      <p className="text-muted-foreground font-serif-display italic text-center py-16 text-lg">
+      <p className="text-muted-foreground text-center py-16 font-display text-xl italic">
         Nothing found for this period.
       </p>
     );
@@ -36,13 +36,12 @@ const EventList = ({ results }: EventListProps) => {
         const isOpen = expandedIndex === i;
         return (
           <div key={`${item.title}-${item.time}-${i}`} className="border-b border-border">
-            {/* Main row */}
             <div
-              className="flex items-center gap-3 py-3.5 cursor-pointer group"
+              className="flex items-center gap-2.5 py-3.5 cursor-pointer group"
               onClick={() => setExpandedIndex(isOpen ? null : i)}
             >
               <ChevronDown
-                size={12}
+                size={14}
                 className={`text-muted-foreground group-hover:text-foreground transition-all shrink-0 ${isOpen ? "rotate-180" : ""}`}
               />
 
@@ -51,20 +50,19 @@ const EventList = ({ results }: EventListProps) => {
               </span>
 
               {item.genre && (
-                <span className="text-[10px] font-heading text-muted-foreground bg-secondary px-2 py-0.5 rounded-full whitespace-nowrap hidden md:inline tracking-wide">
+                <span className="text-xs font-heading text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap hidden md:inline font-medium">
                   {item.genre}
                 </span>
               )}
 
-              <span className="text-foreground font-heading text-xs font-medium whitespace-nowrap tabular-nums">
+              <span className="text-foreground font-heading text-sm font-medium whitespace-nowrap tabular-nums">
                 {item.time}
               </span>
 
-              <span className="text-muted-foreground font-heading text-xs whitespace-nowrap hidden sm:inline">
+              <span className="text-muted-foreground font-heading text-sm whitespace-nowrap hidden sm:inline">
                 {item.venue}
               </span>
 
-              {/* Action buttons */}
               <div className="flex items-center gap-1 shrink-0">
                 <div className="relative" ref={calendarOpenIndex === i ? calendarRef : undefined}>
                   <button
@@ -72,21 +70,21 @@ const EventList = ({ results }: EventListProps) => {
                       e.stopPropagation();
                       setCalendarOpenIndex(calendarOpenIndex === i ? null : i);
                     }}
-                    className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-heading font-medium tracking-wide rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-heading font-medium rounded-full border border-border text-foreground hover:border-primary/40 transition-colors"
                   >
-                    <Calendar size={10} />
+                    <Calendar size={11} />
                     <span className="hidden sm:inline">Cal</span>
-                    <ChevronDown size={8} className={`transition-transform ${calendarOpenIndex === i ? "rotate-180" : ""}`} />
+                    <ChevronDown size={10} className={`transition-transform ${calendarOpenIndex === i ? "rotate-180" : ""}`} />
                   </button>
                   {calendarOpenIndex === i && (
-                    <div className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-lg shadow-xl py-1 min-w-[140px] crossfade-enter">
+                    <div className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] crossfade-enter">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           downloadICS(item);
                           setCalendarOpenIndex(null);
                         }}
-                        className="w-full text-left px-3 py-2 text-[11px] font-heading text-foreground hover:bg-secondary transition-colors"
+                        className="w-full text-left px-3 py-2 text-xs font-heading text-foreground hover:bg-secondary transition-colors"
                       >
                         Apple / iCal
                       </button>
@@ -101,7 +99,7 @@ const EventList = ({ results }: EventListProps) => {
                               e.stopPropagation();
                               setCalendarOpenIndex(null);
                             }}
-                            className="block w-full text-left px-3 py-2 text-[11px] font-heading text-foreground hover:bg-secondary transition-colors"
+                            className="block w-full text-left px-3 py-2 text-xs font-heading text-foreground hover:bg-secondary transition-colors"
                           >
                             Google Calendar
                           </a>
@@ -116,54 +114,43 @@ const EventList = ({ results }: EventListProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-heading font-medium tracking-wide rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-heading font-medium rounded-full bg-primary text-primary-foreground hover:opacity-95 transition-opacity"
                 >
                   <span className="hidden sm:inline">Reserve</span>
-                  <ExternalLink size={10} />
+                  <ExternalLink size={11} />
                 </a>
               </div>
             </div>
 
-            {/* Expanded details */}
             {isOpen && (
               <div className="pl-7 pr-2 pb-5 crossfade-enter">
                 <div className="flex items-center gap-2 mb-2 sm:hidden">
-                  <span className="text-[11px] font-heading text-muted-foreground">{item.venue}</span>
+                  <span className="text-xs font-heading text-muted-foreground">{item.venue}</span>
                   {item.genre && (
                     <>
-                      <span className="text-muted-foreground/30">·</span>
-                      <span className="text-[11px] font-heading text-muted-foreground">{item.genre}</span>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-xs font-heading text-muted-foreground">{item.genre}</span>
                     </>
                   )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                  <p className="text-sm font-serif-display text-foreground/70 leading-relaxed">
+                  <p className="text-sm text-foreground/80 leading-relaxed">
                     {item.description || "No description."}
                   </p>
 
-                  <div className="text-[11px] font-heading space-y-1.5 text-muted-foreground sm:text-right sm:min-w-[160px]">
+                  <div className="text-xs font-heading space-y-1.5 text-muted-foreground sm:text-right sm:min-w-[160px]">
                     {item.director && (
-                      <p>
-                        <span className="text-foreground/60">Dir.</span> {item.director}
-                      </p>
+                      <p><span className="font-semibold text-foreground">Dir.</span> {item.director}</p>
                     )}
                     {item.cast && (
-                      <p>
-                        <span className="text-foreground/60">Cast:</span> {item.cast}
-                      </p>
+                      <p><span className="font-semibold text-foreground">Cast:</span> {item.cast}</p>
                     )}
                     {item.duration && (
-                      <p>
-                        <span className="text-foreground/60">Duration:</span> {item.duration}
-                      </p>
+                      <p><span className="font-semibold text-foreground">Duration:</span> {item.duration}</p>
                     )}
-                    <p>
-                      <span className="text-foreground/60">Date:</span> {item.date}
-                    </p>
-                    <p className="hidden sm:block">
-                      <span className="text-foreground/60">Venue:</span> {item.venue}
-                    </p>
+                    <p><span className="font-semibold text-foreground">Date:</span> {item.date}</p>
+                    <p className="hidden sm:block"><span className="font-semibold text-foreground">Venue:</span> {item.venue}</p>
                   </div>
                 </div>
               </div>

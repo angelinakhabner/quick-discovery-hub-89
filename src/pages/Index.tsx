@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { Plus, LogOut, Loader2 } from "lucide-react";
+import { Plus, LogOut, Loader2, ArrowRight } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
@@ -39,21 +39,13 @@ const Index = () => {
     if (venueCategory) {
       sourcesToScrape = folder.sources.filter((s) => s.category === venueCategory);
     }
-
-    if (sourcesToScrape.length === 0) {
-      setResults([]);
-      return;
-    }
+    if (sourcesToScrape.length === 0) { setResults([]); return; }
 
     const cacheKey = `${folder.id}-${filter}-${venueCategory || 'all'}-${timeAfter || 'any'}`;
-    if (cache.current[cacheKey]) {
-      setResults(cache.current[cacheKey]);
-      return;
-    }
+    if (cache.current[cacheKey]) { setResults(cache.current[cacheKey]); return; }
 
     setIsLoading(true);
     setResults([]);
-
     try {
       const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined, folder.promptHint);
       if (response.success && response.data) {
@@ -79,11 +71,7 @@ const Index = () => {
   };
 
   const handleFolderSelect = useCallback((id: string) => {
-    if (activeFolderId === id) {
-      setActiveFolderId(null);
-      setResults([]);
-      return;
-    }
+    if (activeFolderId === id) { setActiveFolderId(null); setResults([]); return; }
     setActiveFolderId(id);
     const folder = folders.find((f) => f.id === id);
     if (folder) {
@@ -95,23 +83,17 @@ const Index = () => {
 
   const handleFilterSelect = useCallback((filter: TimeFilter) => {
     setActiveFilter(filter);
-    if (activeFolder) {
-      fetchResults(activeFolder, filter, selectedVenues, afterTime);
-    }
+    if (activeFolder) fetchResults(activeFolder, filter, selectedVenues, afterTime);
   }, [activeFolder, selectedVenues, afterTime, fetchResults]);
 
   const handleVenueChange = useCallback((category: string | null) => {
     setSelectedVenues(category);
-    if (activeFolder) {
-      fetchResults(activeFolder, activeFilter, category, afterTime);
-    }
+    if (activeFolder) fetchResults(activeFolder, activeFilter, category, afterTime);
   }, [activeFolder, activeFilter, afterTime, fetchResults]);
 
   const handleAfterTimeChange = useCallback((time: string) => {
     setAfterTime(time);
-    if (activeFolder) {
-      fetchResults(activeFolder, activeFilter, selectedVenues, time);
-    }
+    if (activeFolder) fetchResults(activeFolder, activeFilter, selectedVenues, time);
   }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
   const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string, dateFilterMode?: DateFilterMode) => {
@@ -127,46 +109,34 @@ const Index = () => {
 
   const handleUpdatePromptHint = useCallback(async (id: string, hint: string) => {
     await updatePromptHint(id, hint);
-    Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(id)) delete cache.current[key];
-    });
+    Object.keys(cache.current).forEach((key) => { if (key.startsWith(id)) delete cache.current[key]; });
   }, [updatePromptHint]);
 
   const handleUpdateDateFilterMode = useCallback(async (id: string, mode: DateFilterMode) => {
     await updateDateFilterMode(id, mode);
-    Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(id)) delete cache.current[key];
-    });
+    Object.keys(cache.current).forEach((key) => { if (key.startsWith(id)) delete cache.current[key]; });
     const filter = defaultFilterForMode(mode);
     setActiveFilter(filter);
     const folder = folders.find((f) => f.id === id);
-    if (folder && activeFolderId === id) {
-      fetchResults({ ...folder, dateFilterMode: mode }, filter, selectedVenues, afterTime);
-    }
+    if (folder && activeFolderId === id) fetchResults({ ...folder, dateFilterMode: mode }, filter, selectedVenues, afterTime);
   }, [updateDateFilterMode, folders, activeFolderId, selectedVenues, afterTime, fetchResults]);
 
   const handleAddSource = useCallback(async (url: string, category?: string) => {
     if (!editingFolderId) return;
     await addSource(editingFolderId, url, category);
-    Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(editingFolderId)) delete cache.current[key];
-    });
+    Object.keys(cache.current).forEach((key) => { if (key.startsWith(editingFolderId)) delete cache.current[key]; });
   }, [editingFolderId, addSource]);
 
   const handleRemoveSource = useCallback(async (url: string) => {
     if (!editingFolderId) return;
     await removeSource(editingFolderId, url);
-    Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(editingFolderId)) delete cache.current[key];
-    });
+    Object.keys(cache.current).forEach((key) => { if (key.startsWith(editingFolderId)) delete cache.current[key]; });
   }, [editingFolderId, removeSource]);
 
   const handleUpdateSourceCategory = useCallback(async (url: string, category: string) => {
     if (!editingFolderId) return;
     await updateSourceCategory(editingFolderId, url, category);
-    Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(editingFolderId)) delete cache.current[key];
-    });
+    Object.keys(cache.current).forEach((key) => { if (key.startsWith(editingFolderId)) delete cache.current[key]; });
   }, [editingFolderId, updateSourceCategory]);
 
   const handleRenameFolder = useCallback(async (id: string, newName: string) => {
@@ -175,53 +145,50 @@ const Index = () => {
 
   const handleDeleteFolder = useCallback(async (id: string) => {
     await deleteFolder(id);
-    if (activeFolderId === id) {
-      setActiveFolderId(null);
-      setResults([]);
-    }
+    if (activeFolderId === id) { setActiveFolderId(null); setResults([]); }
   }, [deleteFolder, activeFolderId]);
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-5 pt-8 sm:pt-14 pb-20">
+      <div className="max-w-2xl mx-auto px-5 pt-6 sm:pt-10 pb-20">
         {/* Header */}
-        <header className="mb-10 sm:mb-14">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="font-serif-display text-4xl sm:text-5xl italic text-foreground tracking-tight">
+        <header className="mb-8 sm:mb-12">
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="font-display text-3xl sm:text-4xl text-foreground">
               Whatsön
             </h1>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-heading font-medium tracking-wide uppercase rounded-full border border-border text-foreground hover:bg-secondary transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-heading font-semibold rounded-full bg-primary text-primary-foreground hover:opacity-95 transition-opacity"
               >
-                <Plus size={14} />
+                <Plus size={15} />
                 <span className="hidden sm:inline">New Folder</span>
                 <span className="sm:hidden">New</span>
               </button>
               <button
                 onClick={signOut}
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary"
                 aria-label="Sign out"
               >
                 <LogOut size={16} />
               </button>
             </div>
           </div>
-          <p className="text-muted-foreground font-heading text-sm tracking-wide">
-            Welcome back, <span className="text-foreground">{displayName}</span>
+          <p className="text-muted-foreground text-sm">
+            Hi, <span className="text-foreground font-medium">{displayName}</span> 👋
           </p>
         </header>
 
         {/* Folders */}
-        <section className="mb-8 sm:mb-10">
-          <p className="text-[10px] font-heading font-medium text-muted-foreground uppercase tracking-[0.2em] mb-3">
-            Collections
+        <section className="mb-8">
+          <p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Folders
           </p>
           {isLoadingFolders ? (
-            <div className="flex items-center gap-2 py-6">
-              <Loader2 size={14} className="text-muted-foreground animate-spin" />
-              <span className="text-muted-foreground text-xs tracking-wide">Loading…</span>
+            <div className="flex items-center gap-2 py-4">
+              <Loader2 size={16} className="text-muted-foreground animate-spin" />
+              <span className="text-muted-foreground text-sm">Loading…</span>
             </div>
           ) : (
             <FolderTabs
@@ -255,8 +222,8 @@ const Index = () => {
             />
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3 crossfade-enter">
-                <Loader2 size={20} className="text-muted-foreground animate-spin" />
-                <p className="text-muted-foreground font-heading text-xs tracking-wide">
+                <Loader2 size={22} className="text-primary animate-spin" />
+                <p className="text-muted-foreground text-sm">
                   Scanning sources…
                 </p>
               </div>
@@ -265,17 +232,23 @@ const Index = () => {
             )}
           </>
         ) : !isLoadingFolders ? (
-          <div className="text-center py-20">
-            <p className="font-serif-display text-xl italic text-muted-foreground mb-2">
-              {folders.length === 0
-                ? "Begin your collection"
-                : "Select a collection"}
+          <div className="text-center py-16 sm:py-20">
+            <p className="font-display text-2xl sm:text-3xl text-foreground mb-2">
+              {folders.length === 0 ? "Start discovering." : "Pick a folder."}
             </p>
-            <p className="text-muted-foreground font-heading text-xs tracking-wide">
+            <p className="text-muted-foreground text-sm max-w-xs mx-auto">
               {folders.length === 0
-                ? "Create a folder and add source URLs to discover events"
-                : "Choose a folder above to browse its events"}
+                ? "Create your first folder and add source URLs to track events from your favorite venues."
+                : "Select a folder above to browse events, or create a new one."}
             </p>
+            {folders.length === 0 && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="mt-6 inline-flex items-center gap-2 px-6 py-3 text-sm font-heading font-semibold rounded-full bg-primary text-primary-foreground hover:opacity-95 transition-opacity"
+              >
+                Get Started <ArrowRight size={16} />
+              </button>
+            )}
           </div>
         ) : null}
       </div>
