@@ -108,8 +108,8 @@ const Index = () => {
               >
                 <Plus size={14} className="sm:hidden" />
                 <Plus size={16} className="hidden sm:block" />
-                <span className="hidden sm:inline">Nowy folder</span>
-                <span className="sm:hidden">Nowy</span>
+                <span className="hidden sm:inline">New Folder</span>
+                <span className="sm:hidden">New</span>
               </button>
               <button
                 onClick={signOut}
