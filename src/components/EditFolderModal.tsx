@@ -8,6 +8,7 @@ interface EditFolderModalProps {
   onAddSource: (url: string, category?: string) => void;
   onRemoveSource: (url: string) => void;
   onUpdateSourceCategory: (url: string, category: string) => void;
+  onUpdatePromptHint: (id: string, hint: string) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
 }
