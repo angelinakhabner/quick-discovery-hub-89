@@ -154,8 +154,9 @@ const Index = () => {
         {/* Header */}
         <header className="mb-8 sm:mb-12">
           <div className="flex items-center justify-between mb-1">
-            <h1 className="font-display text-3xl sm:text-4xl text-foreground">
-              Whatsön
+            <h1 className="font-display text-lg sm:text-xl text-foreground italic leading-snug">
+              "moze pojdziemy do kina/teatru/na koncert?"
+              <span className="block text-xs text-muted-foreground not-italic mt-0.5">at 17:53 on a random tuesday</span>
             </h1>
             <div className="flex items-center gap-2">
               <button
@@ -274,14 +275,6 @@ const Index = () => {
         />
       )}
 
-      {/* Dedication */}
-      <footer className="max-w-2xl mx-auto px-5 pb-10 pt-4">
-        <p className="text-center text-xs text-muted-foreground/50 italic font-display">
-          Dla Ciebie — bo o 17:53 w losowy wtorek zapytałaś
-          <br />
-          „może pójdziemy do kina / teatru / na koncert?"
-        </p>
-      </footer>
     </div>
   );
 };
