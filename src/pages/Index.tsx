@@ -107,8 +107,8 @@ const Index = () => {
     setFolders((prev) => [...prev, newFolder]);
     setActiveFolderId(newFolder.id);
     setShowAddModal(false);
-    fetchResults(newFolder, activeFilter);
-  }, [activeFilter, fetchResults]);
+    fetchResults(newFolder, activeFilter, selectedVenues, afterTime);
+  }, [activeFilter, selectedVenues, afterTime, fetchResults]);
 
   const handleAddSource = useCallback((url: string) => {
     if (!activeFolderId) return;
