@@ -26,6 +26,15 @@ const Index = () => {
 
   const activeFolder = folders.find((f) => f.id === activeFolderId);
 
+  const filteredResults = useMemo(() => {
+    if (!afterTime) return results;
+    return results.filter((item) => {
+      if (!item.time) return true;
+      const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
+      return eventTime >= afterTime;
+    });
+  }, [results, afterTime]);
+
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
     const cacheKey = `${folder.id}-${filter}`;
     if (cache.current[cacheKey]) {
