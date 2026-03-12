@@ -14,13 +14,13 @@ const VenueFilter = ({ sources, selected, onChange }: VenueFilterProps) => {
   if (categories.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+    <div className="flex items-center gap-2 mb-4 flex-wrap">
       <button
         onClick={() => onChange(null)}
-        className={`px-3 py-1.5 text-[11px] font-heading font-medium tracking-wide rounded-full border transition-colors ${
+        className={`px-3.5 py-1.5 text-sm font-heading font-medium rounded-full transition-all ${
           selected === null
-            ? "bg-foreground text-background border-foreground"
-            : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-foreground/30"
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "bg-card text-foreground border border-border hover:border-primary/40"
         }`}
       >
         All
@@ -29,10 +29,10 @@ const VenueFilter = ({ sources, selected, onChange }: VenueFilterProps) => {
         <button
           key={cat}
           onClick={() => onChange(selected === cat ? null : cat)}
-          className={`px-3 py-1.5 text-[11px] font-heading font-medium tracking-wide rounded-full border transition-colors ${
+          className={`px-3.5 py-1.5 text-sm font-heading font-medium rounded-full transition-all ${
             selected === cat
-              ? "bg-foreground text-background border-foreground"
-              : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-foreground/30"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "bg-card text-foreground border border-border hover:border-primary/40"
           }`}
         >
           {cat}

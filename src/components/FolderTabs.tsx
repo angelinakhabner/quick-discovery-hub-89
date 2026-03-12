@@ -19,14 +19,14 @@ const FolderTabs = ({ folders, activeFolderId, onSelect, onEdit }: FolderTabsPro
           <div key={folder.id} className="relative group">
             <button
               onClick={() => onSelect(folder.id)}
-              className={`px-4 py-2 text-xs font-heading font-medium tracking-wide rounded-full transition-all pr-8 ${
+              className={`px-4 py-2 text-sm font-heading font-medium rounded-full transition-all pr-8 ${
                 isActive
-                  ? "bg-foreground text-background"
-                  : "bg-secondary text-secondary-foreground hover:text-foreground border border-border"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-card text-foreground border border-border hover:border-primary/40 hover:shadow-sm"
               }`}
             >
               {folder.name}
-              <span className={`ml-1.5 text-[10px] ${isActive ? "opacity-50" : "opacity-40"}`}>
+              <span className={`ml-1 text-xs ${isActive ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                 {folder.sources.length}
               </span>
             </button>
@@ -36,12 +36,12 @@ const FolderTabs = ({ folders, activeFolderId, onSelect, onEdit }: FolderTabsPro
                 e.stopPropagation();
                 onEdit(folder);
               }}
-              className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${
-                isActive ? "text-background/50 hover:text-background" : "text-muted-foreground hover:text-foreground"
+              className={`absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${
+                isActive ? "text-primary-foreground/60 hover:text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
               aria-label={`Edit ${folder.name}`}
             >
-              <Pencil size={11} />
+              <Pencil size={12} />
             </button>
           </div>
         );
