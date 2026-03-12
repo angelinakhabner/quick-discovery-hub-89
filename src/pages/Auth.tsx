@@ -81,7 +81,7 @@ const Auth = () => {
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Twoje imię"
+                placeholder="Your name"
                 className="w-full px-4 py-2.5 text-sm bg-card text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
