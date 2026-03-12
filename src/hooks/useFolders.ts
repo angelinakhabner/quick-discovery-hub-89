@@ -166,6 +166,22 @@ export function useFolders() {
     }
   }, []);
 
+  const renameFolder = useCallback(async (folderId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from("folders")
+        .update({ name: newName })
+        .eq("id", folderId);
+      if (error) throw error;
+      setFolders((prev) =>
+        prev.map((f) => (f.id === folderId ? { ...f, name: newName } : f))
+      );
+    } catch (err) {
+      console.error("Error renaming folder:", err);
+      toast.error("Failed to rename folder");
+    }
+  }, []);
+
   const deleteFolder = useCallback(async (folderId: string) => {
     try {
       const { error } = await supabase.from("folders").delete().eq("id", folderId);
@@ -177,5 +193,5 @@ export function useFolders() {
     }
   }, []);
 
-  return { folders, isLoadingFolders, createFolder, addSource, removeSource, deleteFolder };
+  return { folders, isLoadingFolders, createFolder, addSource, removeSource, renameFolder, deleteFolder };
 }

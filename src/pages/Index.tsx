@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { folders, isLoadingFolders, createFolder, addSource, removeSource } = useFolders();
+  const { folders, isLoadingFolders, createFolder, addSource, removeSource, renameFolder, deleteFolder } = useFolders();
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -133,6 +133,18 @@ const Index = () => {
     });
   }, [activeFolderId, removeSource]);
 
+  const handleRenameFolder = useCallback(async (id: string, newName: string) => {
+    await renameFolder(id, newName);
+  }, [renameFolder]);
+
+  const handleDeleteFolder = useCallback(async (id: string) => {
+    await deleteFolder(id);
+    if (activeFolderId === id) {
+      setActiveFolderId(null);
+      setResults([]);
+    }
+  }, [deleteFolder, activeFolderId]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-10 pb-16">
@@ -187,6 +199,8 @@ const Index = () => {
               activeFolderId={activeFolderId}
               onSelect={handleFolderSelect}
               onAddNew={() => setShowAddModal(true)}
+              onRename={handleRenameFolder}
+              onDelete={handleDeleteFolder}
             />
           )}
         </section>
