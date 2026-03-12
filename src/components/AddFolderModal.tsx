@@ -13,6 +13,7 @@ interface AddFolderModalProps {
 
 const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
   const [name, setName] = useState("");
+  const [promptHint, setPromptHint] = useState("");
   const [sources, setSources] = useState<SourceEntry[]>([]);
   const [newUrl, setNewUrl] = useState("");
   const [newCategory, setNewCategory] = useState("");
