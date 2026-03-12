@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      folder_sources: {
+        Row: {
+          folder_id: string
+          id: string
+          name: string
+          url: string
+        }
+        Insert: {
+          folder_id: string
+          id?: string
+          name: string
+          url: string
+        }
+        Update: {
+          folder_id?: string
+          id?: string
+          name?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_sources_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
