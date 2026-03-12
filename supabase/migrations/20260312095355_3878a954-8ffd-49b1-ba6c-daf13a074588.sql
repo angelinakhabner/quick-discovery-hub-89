@@ -1,0 +1,1 @@
+CREATE POLICY "Users can update own folder sources" ON public.folder_sources FOR UPDATE TO authenticated USING (folder_id IN (SELECT id FROM folders WHERE user_id = auth.uid())) WITH CHECK (folder_id IN (SELECT id FROM folders WHERE user_id = auth.uid()));

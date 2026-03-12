@@ -5,7 +5,7 @@ import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
 import { SourcesIndicator } from "@/components/EditSourcesModal";
 import EditFolderModal from "@/components/EditFolderModal";
-import VenueFilter, { venueCategories } from "@/components/VenueFilter";
+import VenueFilter from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useFolders } from "@/hooks/useFolders";
 import AddFolderModal from "@/components/AddFolderModal";
@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { folders, isLoadingFolders, createFolder, addSource, removeSource, renameFolder, deleteFolder } = useFolders();
+  const { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder } = useFolders();
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -38,10 +38,7 @@ const Index = () => {
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter, venueCategory: string | null, timeAfter: string) => {
     let sourcesToScrape = folder.sources;
     if (venueCategory) {
-      const cat = venueCategories.find((c) => c.label === venueCategory);
-      if (cat) {
-        sourcesToScrape = folder.sources.filter((s) => cat.venues.includes(s.name));
-      }
+      sourcesToScrape = folder.sources.filter((s) => s.category === venueCategory);
     }
 
     if (sourcesToScrape.length === 0) {
@@ -119,9 +116,9 @@ const Index = () => {
     }
   }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
 
-  const handleAddSource = useCallback(async (url: string) => {
+  const handleAddSource = useCallback(async (url: string, category?: string) => {
     if (!editingFolderId) return;
-    await addSource(editingFolderId, url);
+    await addSource(editingFolderId, url, category);
     Object.keys(cache.current).forEach((key) => {
       if (key.startsWith(editingFolderId)) delete cache.current[key];
     });
@@ -134,6 +131,14 @@ const Index = () => {
       if (key.startsWith(editingFolderId)) delete cache.current[key];
     });
   }, [editingFolderId, removeSource]);
+
+  const handleUpdateSourceCategory = useCallback(async (url: string, category: string) => {
+    if (!editingFolderId) return;
+    await updateSourceCategory(editingFolderId, url, category);
+    Object.keys(cache.current).forEach((key) => {
+      if (key.startsWith(editingFolderId)) delete cache.current[key];
+    });
+  }, [editingFolderId, updateSourceCategory]);
 
   const handleRenameFolder = useCallback(async (id: string, newName: string) => {
     await renameFolder(id, newName);
@@ -213,7 +218,11 @@ const Index = () => {
               sources={activeFolder.sources}
               onEdit={() => setEditingFolderId(activeFolder.id)}
             />
-            <VenueFilter selected={selectedVenues} onChange={handleVenueChange} />
+            <VenueFilter
+              sources={activeFolder.sources}
+              selected={selectedVenues}
+              onChange={handleVenueChange}
+            />
             <TimeFilters
               active={activeFilter}
               onSelect={handleFilterSelect}
@@ -260,6 +269,7 @@ const Index = () => {
           onRename={handleRenameFolder}
           onAddSource={handleAddSource}
           onRemoveSource={handleRemoveSource}
+          onUpdateSourceCategory={handleUpdateSourceCategory}
           onDelete={handleDeleteFolder}
           onClose={() => setEditingFolderId(null)}
         />

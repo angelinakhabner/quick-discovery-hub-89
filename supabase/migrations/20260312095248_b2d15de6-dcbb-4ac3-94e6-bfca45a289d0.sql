@@ -1,0 +1,1 @@
+ALTER TABLE public.folder_sources ADD COLUMN category text;

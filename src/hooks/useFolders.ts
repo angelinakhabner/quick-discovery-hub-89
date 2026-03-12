@@ -63,7 +63,7 @@ export function useFolders() {
 
         const { data: sourcesData, error: sourcesError } = await supabase
           .from("folder_sources")
-          .select("id, folder_id, url, name");
+          .select("id, folder_id, url, name, category");
 
         if (sourcesError) throw sourcesError;
 
@@ -72,7 +72,7 @@ export function useFolders() {
           name: f.name,
           sources: (sourcesData || [])
             .filter((s) => s.folder_id === f.id)
-            .map((s) => ({ url: s.url, name: s.name })),
+            .map((s) => ({ url: s.url, name: s.name, category: s.category || undefined })),
         }));
 
         setFolders(mapped);
@@ -122,13 +122,13 @@ export function useFolders() {
     }
   }, [user]);
 
-  const addSource = useCallback(async (folderId: string, url: string) => {
-    const source: Source = { url, name: url.replace(/^https?:\/\//, "").replace(/\/$/, "") };
+  const addSource = useCallback(async (folderId: string, url: string, category?: string) => {
+    const source: Source = { url, name: url.replace(/^https?:\/\//, "").replace(/\/$/, ""), category };
 
     try {
       const { error } = await supabase
         .from("folder_sources")
-        .insert({ folder_id: folderId, url: source.url, name: source.name });
+        .insert({ folder_id: folderId, url: source.url, name: source.name, category: category || null });
 
       if (error) throw error;
 
@@ -140,6 +140,29 @@ export function useFolders() {
     } catch (err) {
       console.error("Error adding source:", err);
       toast.error("Failed to add source");
+    }
+  }, []);
+
+  const updateSourceCategory = useCallback(async (folderId: string, url: string, category: string) => {
+    try {
+      const { error } = await supabase
+        .from("folder_sources")
+        .update({ category: category || null })
+        .eq("folder_id", folderId)
+        .eq("url", url);
+
+      if (error) throw error;
+
+      setFolders((prev) =>
+        prev.map((f) =>
+          f.id === folderId
+            ? { ...f, sources: f.sources.map((s) => s.url === url ? { ...s, category: category || undefined } : s) }
+            : f
+        )
+      );
+    } catch (err) {
+      console.error("Error updating source category:", err);
+      toast.error("Failed to update category");
     }
   }, []);
 
@@ -193,5 +216,5 @@ export function useFolders() {
     }
   }, []);
 
-  return { folders, isLoadingFolders, createFolder, addSource, removeSource, renameFolder, deleteFolder };
+  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder };
 }

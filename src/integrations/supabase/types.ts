@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       folder_sources: {
         Row: {
+          category: string | null
           folder_id: string
           id: string
           name: string
           url: string
         }
         Insert: {
+          category?: string | null
           folder_id: string
           id?: string
           name: string
           url: string
         }
         Update: {
+          category?: string | null
           folder_id?: string
           id?: string
           name?: string
