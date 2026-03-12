@@ -11,6 +11,10 @@ const filterLabels: Record<TimeFilter, string> = {
   today: "Today",
   tomorrow: "Tomorrow",
   next3days: "Next 3 days",
+  thisweek: "This week",
+  nextweek: "Next week",
+  thismonth: "This month",
+  nextmonth: "Next month",
 };
 
 const ResultsList = ({ results, folderName, filter, onClose }: ResultsListProps) => {

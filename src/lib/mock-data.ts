@@ -45,10 +45,12 @@ export const defaultFolders: Folder[] = [
     id: "leisure",
     name: "leisure",
     sources: leisureSources,
+    dateFilterMode: "daily",
   },
   {
     id: "ngo-jobs",
     name: "jobs in NGO's",
+    dateFilterMode: "monthly",
     sources: [
       { url: "pracuj.pl", name: "Pracuj.pl" },
       { url: "ngo.pl/praca", name: "NGO.pl Praca" },

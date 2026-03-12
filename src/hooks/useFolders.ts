@@ -89,7 +89,7 @@ export function useFolders() {
     loadFolders();
   }, [user]);
 
-  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string): Promise<Folder | null> => {
+  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string, dateFilterMode?: DateFilterMode): Promise<Folder | null> => {
     if (!user) return null;
 
     try {
