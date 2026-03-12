@@ -30,28 +30,8 @@ const Index = () => {
 
   const activeFolder = folders.find((f) => f.id === activeFolderId);
 
-  const filteredResults = useMemo(() => {
-    let filtered = results;
-
-    // Venue category filter
-    if (selectedVenues) {
-      const cat = venueCategories.find((c) => c.label === selectedVenues);
-      if (cat) {
-        filtered = filtered.filter((item) => cat.venues.includes(item.venue));
-      }
-    }
-
-    // Time filter
-    if (afterTime) {
-      filtered = filtered.filter((item) => {
-        if (!item.time) return true;
-        const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
-        return eventTime >= afterTime;
-      });
-    }
-
-    return filtered;
-  }, [results, afterTime, selectedVenues]);
+  // No more client-side filtering needed — filters are applied before scraping
+  const filteredResults = results;
 
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
     const cacheKey = `${folder.id}-${filter}`;
