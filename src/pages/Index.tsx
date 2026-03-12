@@ -116,6 +116,14 @@ const Index = () => {
     }
   }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
 
+  const handleUpdatePromptHint = useCallback(async (id: string, hint: string) => {
+    await updatePromptHint(id, hint);
+    // Invalidate cache for this folder
+    Object.keys(cache.current).forEach((key) => {
+      if (key.startsWith(id)) delete cache.current[key];
+    });
+  }, [updatePromptHint]);
+
   const handleAddSource = useCallback(async (url: string, category?: string) => {
     if (!editingFolderId) return;
     await addSource(editingFolderId, url, category);
