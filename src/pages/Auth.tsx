@@ -143,12 +143,12 @@ const Auth = () => {
         </form>
 
         <p className="text-center text-sm text-muted-foreground font-heading mt-6">
-          {isLogin ? "Nie masz konta?" : "Masz już konto?"}{" "}
+          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => { setIsLogin(!isLogin); setMessage(null); }}
             className="text-primary hover:underline font-medium"
           >
-            {isLogin ? "Zarejestruj się" : "Zaloguj się"}
+            {isLogin ? "Sign up" : "Sign in"}
           </button>
         </p>
       </div>

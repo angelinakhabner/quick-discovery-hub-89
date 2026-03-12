@@ -157,10 +157,10 @@ const Index = () => {
         ) : (
           <div className="text-center py-12 sm:py-16">
             <p className="text-muted-foreground font-body text-sm sm:text-base mb-1">
-              Wybierz folder powyżej, aby przeglądać wydarzenia
+              Select a folder above to browse events
             </p>
             <p className="text-muted-foreground/60 font-body text-xs sm:text-sm">
-              lub utwórz nowy z własnymi źródłami
+              or create a new one with your own sources
             </p>
           </div>
         )}

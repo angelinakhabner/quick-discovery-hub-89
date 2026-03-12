@@ -64,7 +64,7 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
               onClick={onClose}
               className="px-4 py-3 text-sm font-heading font-medium rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
             >
-              Anuluj
+              Cancel
             </button>
           </div>
         </form>

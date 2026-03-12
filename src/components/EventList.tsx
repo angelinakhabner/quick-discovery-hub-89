@@ -108,10 +108,10 @@ const EventList = ({ results }: EventListProps) => {
                       </p>
                     )}
                     <p>
-                      <span className="font-medium text-foreground">Data:</span> {item.date}
+                      <span className="font-medium text-foreground">Date:</span> {item.date}
                     </p>
                     <p className="hidden sm:block">
-                      <span className="font-medium text-foreground">Miejsce:</span> {item.venue}
+                      <span className="font-medium text-foreground">Venue:</span> {item.venue}
                     </p>
                   </div>
                 </div>
