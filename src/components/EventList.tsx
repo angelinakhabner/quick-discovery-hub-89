@@ -64,7 +64,7 @@ const EventList = ({ results }: EventListProps) => {
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1 px-2.5 sm:px-3 py-1 text-xs font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
               >
-                <span className="hidden sm:inline">Rezerwuj</span>
+                <span className="hidden sm:inline">Reserve</span>
                 <ExternalLink size={10} className="sm:hidden" />
                 <ExternalLink size={10} className="hidden sm:block" />
               </a>
