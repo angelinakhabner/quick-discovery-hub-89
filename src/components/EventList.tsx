@@ -175,34 +175,6 @@ const EventList = ({ results }: EventListProps) => {
                     <p className="hidden sm:block">
                       <span className="font-medium text-foreground">Venue:</span> {item.venue}
                     </p>
-                    {/* Calendar buttons */}
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          downloadICS(item);
-                        }}
-                        className="flex items-center gap-1 px-2 py-0.5 text-xs font-heading rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-                      >
-                        <Calendar size={10} />
-                        iCal
-                      </button>
-                      {(() => {
-                        const gcalUrl = getGoogleCalendarUrl(item);
-                        return gcalUrl ? (
-                          <a
-                            href={gcalUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 px-2 py-0.5 text-xs font-heading rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-                          >
-                            <Calendar size={10} />
-                            Google
-                          </a>
-                        ) : null;
-                      })()}
-                    </div>
                   </div>
                 </div>
               </div>
