@@ -278,6 +278,7 @@ const Index = () => {
           onAddSource={handleAddSource}
           onRemoveSource={handleRemoveSource}
           onUpdateSourceCategory={handleUpdateSourceCategory}
+          onUpdatePromptHint={handleUpdatePromptHint}
           onDelete={handleDeleteFolder}
           onClose={() => setEditingFolderId(null)}
         />
