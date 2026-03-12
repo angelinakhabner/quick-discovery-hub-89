@@ -4,6 +4,7 @@ import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
 import { EditSourcesModal, SourcesIndicator } from "@/components/EditSourcesModal";
+import VenueFilter from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
@@ -20,6 +21,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [afterTime, setAfterTime] = useState("");
   const [showEditSources, setShowEditSources] = useState(false);
+  const [selectedVenues, setSelectedVenues] = useState<Set<string>>(new Set());
 
   // Cache: folderId-filter -> results
   const cache = useRef<Record<string, ResultItem[]>>({});
@@ -29,13 +31,24 @@ const Index = () => {
   const activeFolder = folders.find((f) => f.id === activeFolderId);
 
   const filteredResults = useMemo(() => {
-    if (!afterTime) return results;
-    return results.filter((item) => {
-      if (!item.time) return true;
-      const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
-      return eventTime >= afterTime;
-    });
-  }, [results, afterTime]);
+    let filtered = results;
+
+    // Venue filter
+    if (selectedVenues.size > 0) {
+      filtered = filtered.filter((item) => selectedVenues.has(item.venue));
+    }
+
+    // Time filter
+    if (afterTime) {
+      filtered = filtered.filter((item) => {
+        if (!item.time) return true;
+        const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
+        return eventTime >= afterTime;
+      });
+    }
+
+    return filtered;
+  }, [results, afterTime, selectedVenues]);
 
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
     const cacheKey = `${folder.id}-${filter}`;
@@ -186,6 +199,7 @@ const Index = () => {
               sources={activeFolder.sources}
               onEdit={() => setShowEditSources(true)}
             />
+            <VenueFilter selected={selectedVenues} onChange={setSelectedVenues} />
             <TimeFilters
               active={activeFilter}
               onSelect={handleFilterSelect}
