@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   try {
     const { sources, filter, afterTime, promptHint } = await req.json() as {
       sources: SourceUrl[];
-      filter: 'today' | 'tomorrow' | 'next3days';
+      filter: 'today' | 'tomorrow' | 'next3days' | 'thisweek' | 'nextweek' | 'thismonth' | 'nextmonth';
       afterTime?: string;
       promptHint?: string;
     };
