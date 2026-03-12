@@ -3,7 +3,8 @@ import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
-import { EditSourcesModal, SourcesIndicator } from "@/components/EditSourcesModal";
+import { SourcesIndicator } from "@/components/EditSourcesModal";
+import EditFolderModal from "@/components/EditFolderModal";
 import VenueFilter, { venueCategories } from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useFolders } from "@/hooks/useFolders";
@@ -21,7 +22,7 @@ const Index = () => {
   const [results, setResults] = useState<ResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [afterTime, setAfterTime] = useState("");
-  const [showEditSources, setShowEditSources] = useState(false);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
 
   // Cache: folderId-filter -> results
@@ -30,6 +31,7 @@ const Index = () => {
   const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "there";
 
   const activeFolder = folders.find((f) => f.id === activeFolderId);
+  const editingFolder = folders.find((f) => f.id === editingFolderId) || null;
 
   const filteredResults = results;
 
@@ -118,20 +120,20 @@ const Index = () => {
   }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
 
   const handleAddSource = useCallback(async (url: string) => {
-    if (!activeFolderId) return;
-    await addSource(activeFolderId, url);
+    if (!editingFolderId) return;
+    await addSource(editingFolderId, url);
     Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(activeFolderId)) delete cache.current[key];
+      if (key.startsWith(editingFolderId)) delete cache.current[key];
     });
-  }, [activeFolderId, addSource]);
+  }, [editingFolderId, addSource]);
 
   const handleRemoveSource = useCallback(async (url: string) => {
-    if (!activeFolderId) return;
-    await removeSource(activeFolderId, url);
+    if (!editingFolderId) return;
+    await removeSource(editingFolderId, url);
     Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(activeFolderId)) delete cache.current[key];
+      if (key.startsWith(editingFolderId)) delete cache.current[key];
     });
-  }, [activeFolderId, removeSource]);
+  }, [editingFolderId, removeSource]);
 
   const handleRenameFolder = useCallback(async (id: string, newName: string) => {
     await renameFolder(id, newName);
@@ -199,8 +201,7 @@ const Index = () => {
               activeFolderId={activeFolderId}
               onSelect={handleFolderSelect}
               onAddNew={() => setShowAddModal(true)}
-              onRename={handleRenameFolder}
-              onDelete={handleDeleteFolder}
+              onEdit={(folder) => setEditingFolderId(folder.id)}
             />
           )}
         </section>
@@ -210,7 +211,7 @@ const Index = () => {
           <>
             <SourcesIndicator
               sources={activeFolder.sources}
-              onEdit={() => setShowEditSources(true)}
+              onEdit={() => setEditingFolderId(activeFolder.id)}
             />
             <VenueFilter selected={selectedVenues} onChange={handleVenueChange} />
             <TimeFilters
@@ -253,13 +254,14 @@ const Index = () => {
         />
       )}
 
-      {showEditSources && activeFolder && (
-        <EditSourcesModal
-          folderName={activeFolder.name}
-          sources={activeFolder.sources}
+      {editingFolder && (
+        <EditFolderModal
+          folder={editingFolder}
+          onRename={handleRenameFolder}
           onAddSource={handleAddSource}
           onRemoveSource={handleRemoveSource}
-          onClose={() => setShowEditSources(false)}
+          onDelete={handleDeleteFolder}
+          onClose={() => setEditingFolderId(null)}
         />
       )}
     </div>
