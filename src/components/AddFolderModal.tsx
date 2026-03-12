@@ -42,7 +42,7 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
           </div>
           <div>
             <label className="block text-sm font-heading font-medium text-card-foreground mb-1">
-              Źródła (jeden URL na linię)
+              Sources (one URL per line)
             </label>
             <textarea
               value={urls}
