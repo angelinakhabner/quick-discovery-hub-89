@@ -7,7 +7,7 @@ interface SourceEntry {
 }
 
 interface AddFolderModalProps {
-  onCreateFolder: (name: string, sources: { url: string; category?: string }[]) => void;
+  onCreateFolder: (name: string, sources: { url: string; category?: string }[], promptHint?: string) => void;
   onClose: () => void;
 }
 
