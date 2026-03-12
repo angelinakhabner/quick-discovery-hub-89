@@ -119,20 +119,22 @@ const Index = () => {
   }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
 
   const handleAddSource = useCallback(async (url: string) => {
-    if (!activeFolderId) return;
-    await addSource(activeFolderId, url);
+    const folderId = editingFolder?.id;
+    if (!folderId) return;
+    await addSource(folderId, url);
     Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(activeFolderId)) delete cache.current[key];
+      if (key.startsWith(folderId)) delete cache.current[key];
     });
-  }, [activeFolderId, addSource]);
+  }, [editingFolder, addSource]);
 
   const handleRemoveSource = useCallback(async (url: string) => {
-    if (!activeFolderId) return;
-    await removeSource(activeFolderId, url);
+    const folderId = editingFolder?.id;
+    if (!folderId) return;
+    await removeSource(folderId, url);
     Object.keys(cache.current).forEach((key) => {
-      if (key.startsWith(activeFolderId)) delete cache.current[key];
+      if (key.startsWith(folderId)) delete cache.current[key];
     });
-  }, [activeFolderId, removeSource]);
+  }, [editingFolder, removeSource]);
 
   const handleRenameFolder = useCallback(async (id: string, newName: string) => {
     await renameFolder(id, newName);
