@@ -133,6 +133,18 @@ const Index = () => {
     });
   }, [activeFolderId, removeSource]);
 
+  const handleRenameFolder = useCallback(async (id: string, newName: string) => {
+    await renameFolder(id, newName);
+  }, [renameFolder]);
+
+  const handleDeleteFolder = useCallback(async (id: string) => {
+    await deleteFolder(id);
+    if (activeFolderId === id) {
+      setActiveFolderId(null);
+      setResults([]);
+    }
+  }, [deleteFolder, activeFolderId]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-10 pb-16">
