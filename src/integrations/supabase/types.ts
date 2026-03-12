@@ -49,6 +49,7 @@ export type Database = {
       folders: {
         Row: {
           created_at: string
+          date_filter_mode: string
           id: string
           name: string
           prompt_hint: string | null
@@ -56,6 +57,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          date_filter_mode?: string
           id?: string
           name: string
           prompt_hint?: string | null
@@ -63,6 +65,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          date_filter_mode?: string
           id?: string
           name?: string
           prompt_hint?: string | null
