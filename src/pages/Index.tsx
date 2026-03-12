@@ -182,10 +182,9 @@ const Index = () => {
         {/* Content area */}
         {activeFolderId && activeFolder ? (
           <>
-            <SourcesBar
+            <SourcesIndicator
               sources={activeFolder.sources}
-              onAddSource={handleAddSource}
-              onRemoveSource={handleRemoveSource}
+              onEdit={() => setShowEditSources(true)}
             />
             <TimeFilters
               active={activeFilter}
