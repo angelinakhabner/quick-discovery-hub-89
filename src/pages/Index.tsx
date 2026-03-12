@@ -115,14 +115,16 @@ const Index = () => {
     }
   }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
-  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string) => {
-    const newFolder = await createFolder(name, sources, promptHint);
+  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string, dateFilterMode?: DateFilterMode) => {
+    const newFolder = await createFolder(name, sources, promptHint, dateFilterMode);
     if (newFolder) {
       setActiveFolderId(newFolder.id);
       setShowAddModal(false);
-      fetchResults(newFolder, activeFilter, selectedVenues, afterTime);
+      const filter = defaultFilterForMode(newFolder.dateFilterMode);
+      setActiveFilter(filter);
+      fetchResults(newFolder, filter, selectedVenues, afterTime);
     }
-  }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
+  }, [createFolder, selectedVenues, afterTime, fetchResults]);
 
   const handleUpdatePromptHint = useCallback(async (id: string, hint: string) => {
     await updatePromptHint(id, hint);
