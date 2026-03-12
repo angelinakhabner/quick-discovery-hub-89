@@ -261,7 +261,7 @@ const Index = () => {
           onAddSource={handleAddSource}
           onRemoveSource={handleRemoveSource}
           onDelete={handleDeleteFolder}
-          onClose={() => setEditingFolder(null)}
+          onClose={() => setEditingFolderId(null)}
         />
       )}
     </div>
