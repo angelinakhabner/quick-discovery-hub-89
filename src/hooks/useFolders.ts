@@ -50,7 +50,7 @@ export function useFolders() {
       try {
         const { data: foldersData, error: foldersError } = await supabase
           .from("folders")
-          .select("id, name, created_at")
+          .select("id, name, created_at, prompt_hint")
           .order("created_at", { ascending: true });
 
         if (foldersError) throw foldersError;
@@ -70,6 +70,7 @@ export function useFolders() {
         const mapped: Folder[] = foldersData.map((f) => ({
           id: f.id,
           name: f.name,
+          promptHint: f.prompt_hint || undefined,
           sources: (sourcesData || [])
             .filter((s) => s.folder_id === f.id)
             .map((s) => ({ url: s.url, name: s.name, category: s.category || undefined })),
@@ -87,14 +88,14 @@ export function useFolders() {
     loadFolders();
   }, [user]);
 
-  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[]): Promise<Folder | null> => {
+  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string): Promise<Folder | null> => {
     if (!user) return null;
 
     try {
       const { data: folder, error: folderError } = await supabase
         .from("folders")
-        .insert({ name, user_id: user.id })
-        .select("id, name")
+        .insert({ name, user_id: user.id, prompt_hint: promptHint || null })
+        .select("id, name, prompt_hint")
         .single();
 
       if (folderError) throw folderError;
@@ -113,7 +114,7 @@ export function useFolders() {
         if (sourcesError) throw sourcesError;
       }
 
-      const newFolder: Folder = { id: folder.id, name: folder.name, sources: mappedSources };
+      const newFolder: Folder = { id: folder.id, name: folder.name, sources: mappedSources, promptHint: folder.prompt_hint || undefined };
       setFolders((prev) => [...prev, newFolder]);
       return newFolder;
     } catch (err) {
@@ -217,5 +218,21 @@ export function useFolders() {
     }
   }, []);
 
-  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder };
+  const updatePromptHint = useCallback(async (folderId: string, promptHint: string) => {
+    try {
+      const { error } = await supabase
+        .from("folders")
+        .update({ prompt_hint: promptHint || null })
+        .eq("id", folderId);
+      if (error) throw error;
+      setFolders((prev) =>
+        prev.map((f) => (f.id === folderId ? { ...f, promptHint: promptHint || undefined } : f))
+      );
+    } catch (err) {
+      console.error("Error updating prompt hint:", err);
+      toast.error("Failed to update content filter");
+    }
+  }, []);
+
+  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint };
 }

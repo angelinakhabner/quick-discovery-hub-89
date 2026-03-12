@@ -8,12 +8,14 @@ interface EditFolderModalProps {
   onAddSource: (url: string, category?: string) => void;
   onRemoveSource: (url: string) => void;
   onUpdateSourceCategory: (url: string, category: string) => void;
+  onUpdatePromptHint: (id: string, hint: string) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
 }
 
-const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpdateSourceCategory, onDelete, onClose }: EditFolderModalProps) => {
+const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpdateSourceCategory, onUpdatePromptHint, onDelete, onClose }: EditFolderModalProps) => {
   const [name, setName] = useState(folder.name);
+  const [promptHint, setPromptHint] = useState(folder.promptHint || "");
   const [newUrl, setNewUrl] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -68,6 +70,35 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleNameBlur(); (e.target as HTMLInputElement).blur(); } }}
             className="w-full px-4 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
+        </div>
+
+        {/* Content filter */}
+        <div className="mb-6">
+          <label className="block text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+            Content filter
+          </label>
+          <input
+            type="text"
+            value={promptHint}
+            onChange={(e) => setPromptHint(e.target.value)}
+            onBlur={() => {
+              if (promptHint.trim() !== (folder.promptHint || "")) {
+                onUpdatePromptHint(folder.id, promptHint.trim());
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (promptHint.trim() !== (folder.promptHint || "")) {
+                  onUpdatePromptHint(folder.id, promptHint.trim());
+                }
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            placeholder="e.g. only exhibitions, only concerts"
+            className="w-full px-4 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          <p className="text-xs text-muted-foreground mt-1 font-body">Tells the scraper what type of events to extract</p>
         </div>
 
         {/* Sources */}

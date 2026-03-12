@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder } = useFolders();
+  const { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint } = useFolders();
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -56,7 +56,7 @@ const Index = () => {
     setResults([]);
 
     try {
-      const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined);
+      const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined, folder.promptHint);
       if (response.success && response.data) {
         cache.current[cacheKey] = response.data;
         setResults(response.data);
@@ -107,14 +107,22 @@ const Index = () => {
     }
   }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
-  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[]) => {
-    const newFolder = await createFolder(name, sources);
+  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string) => {
+    const newFolder = await createFolder(name, sources, promptHint);
     if (newFolder) {
       setActiveFolderId(newFolder.id);
       setShowAddModal(false);
       fetchResults(newFolder, activeFilter, selectedVenues, afterTime);
     }
   }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
+
+  const handleUpdatePromptHint = useCallback(async (id: string, hint: string) => {
+    await updatePromptHint(id, hint);
+    // Invalidate cache for this folder
+    Object.keys(cache.current).forEach((key) => {
+      if (key.startsWith(id)) delete cache.current[key];
+    });
+  }, [updatePromptHint]);
 
   const handleAddSource = useCallback(async (url: string, category?: string) => {
     if (!editingFolderId) return;
@@ -270,6 +278,7 @@ const Index = () => {
           onAddSource={handleAddSource}
           onRemoveSource={handleRemoveSource}
           onUpdateSourceCategory={handleUpdateSourceCategory}
+          onUpdatePromptHint={handleUpdatePromptHint}
           onDelete={handleDeleteFolder}
           onClose={() => setEditingFolderId(null)}
         />
