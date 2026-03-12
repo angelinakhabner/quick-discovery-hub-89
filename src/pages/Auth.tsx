@@ -138,7 +138,7 @@ const Auth = () => {
             disabled={loading}
             className="w-full py-2.5 text-sm font-heading font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {loading ? "…" : isLogin ? "Zaloguj się" : "Utwórz konto"}
+            {loading ? "…" : isLogin ? "Sign in" : "Create account"}
           </button>
         </form>
 
