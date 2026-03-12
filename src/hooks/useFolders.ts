@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import type { Folder, Source } from "@/lib/mock-data";
+import { defaultFolders, type Folder, type Source } from "@/lib/mock-data";
 
 export function useFolders() {
   const { user } = useAuth();
