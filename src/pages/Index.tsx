@@ -154,9 +154,10 @@ const Index = () => {
         {/* Header */}
         <header className="mb-8 sm:mb-12">
           <div className="flex items-center justify-between mb-1">
-            <h1 className="font-display text-lg sm:text-xl text-foreground italic leading-snug">
-              "moze pojdziemy do kina/teatru/na koncert?"
-              <span className="block text-xs text-muted-foreground not-italic mt-0.5">at 17:53 on a random tuesday</span>
+            <h1 className="font-display text-base sm:text-lg text-foreground leading-snug">
+              <span className="text-muted-foreground text-xs not-italic">to my girlfriend saying</span>
+              <span className="block italic">"moze pojdziemy do kina/teatru/na koncert?"</span>
+              <span className="block text-xs text-muted-foreground not-italic">at 17:53 on a random tuesday</span>
             </h1>
             <div className="flex items-center gap-2">
               <button
