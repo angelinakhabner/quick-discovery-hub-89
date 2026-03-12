@@ -235,5 +235,21 @@ export function useFolders() {
     }
   }, []);
 
-  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint };
+  const updateDateFilterMode = useCallback(async (folderId: string, mode: DateFilterMode) => {
+    try {
+      const { error } = await supabase
+        .from("folders")
+        .update({ date_filter_mode: mode })
+        .eq("id", folderId);
+      if (error) throw error;
+      setFolders((prev) =>
+        prev.map((f) => (f.id === folderId ? { ...f, dateFilterMode: mode } : f))
+      );
+    } catch (err) {
+      console.error("Error updating date filter mode:", err);
+      toast.error("Failed to update date filter mode");
+    }
+  }, []);
+
+  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint, updateDateFilterMode };
 }
