@@ -4,7 +4,7 @@ import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
 import { EditSourcesModal, SourcesIndicator } from "@/components/EditSourcesModal";
-import VenueFilter from "@/components/VenueFilter";
+import VenueFilter, { venueCategories } from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
