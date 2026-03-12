@@ -3,7 +3,7 @@ import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
-import SourcesBar from "@/components/SourcesBar";
+import { EditSourcesModal, SourcesIndicator } from "@/components/EditSourcesModal";
 import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
