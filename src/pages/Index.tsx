@@ -200,8 +200,7 @@ const Index = () => {
               activeFolderId={activeFolderId}
               onSelect={handleFolderSelect}
               onAddNew={() => setShowAddModal(true)}
-              onRename={handleRenameFolder}
-              onDelete={handleDeleteFolder}
+              onEdit={(folder) => setEditingFolder(folder)}
             />
           )}
         </section>
