@@ -70,18 +70,66 @@ const EventList = ({ results }: EventListProps) => {
                 {item.venue}
               </span>
 
-              {/* Reserve button */}
-              <a
-                href={item.sourceUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 px-2.5 sm:px-3 py-1 text-xs font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
-              >
-                <span className="hidden sm:inline">Reserve</span>
-                <ExternalLink size={10} className="sm:hidden" />
-                <ExternalLink size={10} className="hidden sm:block" />
-              </a>
+              {/* Action buttons */}
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Calendar dropdown */}
+                <div className="relative" ref={calendarOpenIndex === i ? calendarRef : undefined}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCalendarOpenIndex(calendarOpenIndex === i ? null : i);
+                    }}
+                    className="flex items-center gap-1 px-2.5 sm:px-3 py-1 text-xs font-heading font-medium rounded-full border border-border text-foreground hover:border-primary/40 transition-colors whitespace-nowrap"
+                  >
+                    <Calendar size={10} />
+                    <span className="hidden sm:inline">Calendar</span>
+                    <ChevronDown size={10} className={`transition-transform ${calendarOpenIndex === i ? "rotate-180" : ""}`} />
+                  </button>
+                  {calendarOpenIndex === i && (
+                    <div className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[140px] crossfade-enter">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadICS(item);
+                          setCalendarOpenIndex(null);
+                        }}
+                        className="w-full text-left px-3 py-1.5 text-xs font-heading text-foreground hover:bg-muted transition-colors"
+                      >
+                        Apple / iCal
+                      </button>
+                      {(() => {
+                        const gcalUrl = getGoogleCalendarUrl(item);
+                        return gcalUrl ? (
+                          <a
+                            href={gcalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCalendarOpenIndex(null);
+                            }}
+                            className="block w-full text-left px-3 py-1.5 text-xs font-heading text-foreground hover:bg-muted transition-colors"
+                          >
+                            Google Calendar
+                          </a>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Reserve button */}
+                <a
+                  href={item.sourceUrl || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 px-2.5 sm:px-3 py-1 text-xs font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">Reserve</span>
+                  <ExternalLink size={10} />
+                </a>
+              </div>
             </div>
 
             {/* Expanded details */}
