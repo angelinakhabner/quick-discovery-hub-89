@@ -70,6 +70,7 @@ export function useFolders() {
         const mapped: Folder[] = foldersData.map((f) => ({
           id: f.id,
           name: f.name,
+          promptHint: f.prompt_hint || undefined,
           sources: (sourcesData || [])
             .filter((s) => s.folder_id === f.id)
             .map((s) => ({ url: s.url, name: s.name, category: s.category || undefined })),
