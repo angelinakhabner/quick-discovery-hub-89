@@ -210,12 +210,12 @@ const Index = () => {
               sources={activeFolder.sources}
               onEdit={() => setShowEditSources(true)}
             />
-            <VenueFilter selected={selectedVenues} onChange={setSelectedVenues} />
+            <VenueFilter selected={selectedVenues} onChange={handleVenueChange} />
             <TimeFilters
               active={activeFilter}
               onSelect={handleFilterSelect}
               afterTime={afterTime}
-              onAfterTimeChange={setAfterTime}
+              onAfterTimeChange={handleAfterTimeChange}
             />
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
