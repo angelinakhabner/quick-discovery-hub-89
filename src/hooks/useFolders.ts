@@ -71,6 +71,7 @@ export function useFolders() {
           id: f.id,
           name: f.name,
           promptHint: f.prompt_hint || undefined,
+          dateFilterMode: (f.date_filter_mode as DateFilterMode) || "daily",
           sources: (sourcesData || [])
             .filter((s) => s.folder_id === f.id)
             .map((s) => ({ url: s.url, name: s.name, category: s.category || undefined })),
