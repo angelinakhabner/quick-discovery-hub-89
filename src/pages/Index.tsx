@@ -107,8 +107,8 @@ const Index = () => {
     }
   }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
-  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[]) => {
-    const newFolder = await createFolder(name, sources);
+  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string) => {
+    const newFolder = await createFolder(name, sources, promptHint);
     if (newFolder) {
       setActiveFolderId(newFolder.id);
       setShowAddModal(false);
