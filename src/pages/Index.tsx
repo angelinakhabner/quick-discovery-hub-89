@@ -179,8 +179,13 @@ const Index = () => {
         </section>
 
         {/* Content area */}
-        {activeFolderId ? (
+        {activeFolderId && activeFolder ? (
           <>
+            <SourcesBar
+              sources={activeFolder.sources}
+              onAddSource={handleAddSource}
+              onRemoveSource={handleRemoveSource}
+            />
             <TimeFilters
               active={activeFilter}
               onSelect={handleFilterSelect}
