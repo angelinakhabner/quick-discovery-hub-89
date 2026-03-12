@@ -218,5 +218,21 @@ export function useFolders() {
     }
   }, []);
 
-  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder };
+  const updatePromptHint = useCallback(async (folderId: string, promptHint: string) => {
+    try {
+      const { error } = await supabase
+        .from("folders")
+        .update({ prompt_hint: promptHint || null })
+        .eq("id", folderId);
+      if (error) throw error;
+      setFolders((prev) =>
+        prev.map((f) => (f.id === folderId ? { ...f, promptHint: promptHint || undefined } : f))
+      );
+    } catch (err) {
+      console.error("Error updating prompt hint:", err);
+      toast.error("Failed to update content filter");
+    }
+  }, []);
+
+  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint };
 }

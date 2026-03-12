@@ -56,7 +56,7 @@ const Index = () => {
     setResults([]);
 
     try {
-      const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined);
+      const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined, folder.promptHint);
       if (response.success && response.data) {
         cache.current[cacheKey] = response.data;
         setResults(response.data);

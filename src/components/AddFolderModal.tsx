@@ -66,6 +66,20 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
             />
           </div>
 
+          {/* Content filter */}
+          <div>
+            <label className="block text-sm font-heading font-medium text-card-foreground mb-1">
+              Content filter <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={promptHint}
+              onChange={(e) => setPromptHint(e.target.value)}
+              placeholder="e.g. only exhibitions, only concerts"
+              className="w-full px-4 py-3 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+
           {/* Sources list */}
           <div>
             <label className="block text-sm font-heading font-medium text-card-foreground mb-1">

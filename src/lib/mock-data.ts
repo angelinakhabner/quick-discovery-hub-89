@@ -10,6 +10,7 @@ export type Folder = {
   id: string;
   name: string;
   sources: Source[];
+  promptHint?: string;
 };
 
 export type ResultItem = {
