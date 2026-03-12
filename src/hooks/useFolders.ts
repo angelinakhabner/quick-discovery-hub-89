@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import type { Folder, Source } from "@/lib/mock-data";
+import { defaultFolders, type Folder, type Source } from "@/lib/mock-data";
 
 export function useFolders() {
   const { user } = useAuth();
@@ -17,6 +17,34 @@ export function useFolders() {
       return;
     }
 
+    const seedDefaultFolders = async (userId: string) => {
+      try {
+        for (const df of defaultFolders) {
+          const { data: folder, error: folderError } = await supabase
+            .from("folders")
+            .insert({ name: df.name, user_id: userId })
+            .select("id")
+            .single();
+
+          if (folderError) throw folderError;
+
+          if (df.sources.length > 0) {
+            const { error: srcError } = await supabase
+              .from("folder_sources")
+              .insert(df.sources.map((s) => ({ folder_id: folder.id, url: s.url, name: s.name })));
+            if (srcError) throw srcError;
+          }
+        }
+        // Reload after seeding
+        loadFolders();
+        return;
+      } catch (err) {
+        console.error("Error seeding default folders:", err);
+      } finally {
+        setIsLoadingFolders(false);
+      }
+    };
+
     const loadFolders = async () => {
       setIsLoadingFolders(true);
       try {
@@ -28,8 +56,8 @@ export function useFolders() {
         if (foldersError) throw foldersError;
 
         if (!foldersData?.length) {
-          setFolders([]);
-          setIsLoadingFolders(false);
+          // Seed default folders for new users
+          await seedDefaultFolders(user.id);
           return;
         }
 
