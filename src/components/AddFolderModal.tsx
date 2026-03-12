@@ -1,22 +1,45 @@
 import { useState } from "react";
+import { Plus, X } from "lucide-react";
+
+interface SourceEntry {
+  url: string;
+  category: string;
+}
 
 interface AddFolderModalProps {
-  onCreateFolder: (name: string, urls: string[]) => void;
+  onCreateFolder: (name: string, sources: { url: string; category?: string }[]) => void;
   onClose: () => void;
 }
 
 const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
   const [name, setName] = useState("");
-  const [urls, setUrls] = useState("");
+  const [sources, setSources] = useState<SourceEntry[]>([]);
+  const [newUrl, setNewUrl] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+
+  const existingCategories = Array.from(
+    new Set(sources.map((s) => s.category).filter(Boolean))
+  );
+
+  const handleAddSource = () => {
+    const trimmed = newUrl.trim();
+    if (!trimmed) return;
+    setSources((prev) => [...prev, { url: trimmed, category: newCategory.trim() }]);
+    setNewUrl("");
+    setNewCategory("");
+  };
+
+  const handleRemoveSource = (idx: number) => {
+    setSources((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    const parsedUrls = urls
-      .split("\n")
-      .map((u) => u.trim())
-      .filter(Boolean);
-    onCreateFolder(name.trim(), parsedUrls);
+    onCreateFolder(
+      name.trim(),
+      sources.map((s) => ({ url: s.url, category: s.category || undefined }))
+    );
   };
 
   return (
@@ -40,22 +63,68 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
               className="w-full px-4 py-3 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
+
+          {/* Sources list */}
           <div>
             <label className="block text-sm font-heading font-medium text-card-foreground mb-1">
-              Sources (one URL per line)
+              Sources
             </label>
-            <textarea
-              value={urls}
-              onChange={(e) => setUrls(e.target.value)}
-              placeholder={"jassmine.pl\nklubkomediowy.pl\nmuranow.waw.pl"}
-              rows={4}
-              className="w-full px-4 py-3 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-            />
+            {sources.length > 0 && (
+              <div className="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
+                {sources.map((src, idx) => (
+                  <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-background border border-border text-xs">
+                    <span className="truncate flex-1 font-heading text-foreground">{src.url}</span>
+                    {src.category && (
+                      <span className="shrink-0 px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-heading">{src.category}</span>
+                    )}
+                    <button type="button" onClick={() => handleRemoveSource(idx)} className="shrink-0 text-muted-foreground hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add source row */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSource(); } }}
+                placeholder="example.com/events"
+                className="flex-1 px-3 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <input
+                type="text"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSource(); } }}
+                placeholder="category"
+                list="add-folder-cat"
+                className="w-24 px-3 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              {existingCategories.length > 0 && (
+                <datalist id="add-folder-cat">
+                  {existingCategories.map((c) => <option key={c} value={c} />)}
+                </datalist>
+              )}
+              <button
+                type="button"
+                onClick={handleAddSource}
+                disabled={!newUrl.trim()}
+                className="px-3 py-2.5 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
           </div>
+
           <div className="flex gap-3 pt-2">
             <button
               type="submit"
-              className="flex-1 px-4 py-3 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+              disabled={!name.trim()}
+              className="flex-1 px-4 py-3 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               Create Folder
             </button>

@@ -87,7 +87,7 @@ export function useFolders() {
     loadFolders();
   }, [user]);
 
-  const createFolder = useCallback(async (name: string, urls: string[]): Promise<Folder | null> => {
+  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[]): Promise<Folder | null> => {
     if (!user) return null;
 
     try {
@@ -99,20 +99,21 @@ export function useFolders() {
 
       if (folderError) throw folderError;
 
-      const sources: Source[] = urls.map((url) => ({
-        url,
-        name: url.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+      const mappedSources: Source[] = sources.map((s) => ({
+        url: s.url,
+        name: s.url.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+        category: s.category,
       }));
 
-      if (sources.length > 0) {
+      if (mappedSources.length > 0) {
         const { error: sourcesError } = await supabase
           .from("folder_sources")
-          .insert(sources.map((s) => ({ folder_id: folder.id, url: s.url, name: s.name })));
+          .insert(mappedSources.map((s) => ({ folder_id: folder.id, url: s.url, name: s.name, category: s.category || null })));
 
         if (sourcesError) throw sourcesError;
       }
 
-      const newFolder: Folder = { id: folder.id, name: folder.name, sources };
+      const newFolder: Folder = { id: folder.id, name: folder.name, sources: mappedSources };
       setFolders((prev) => [...prev, newFolder]);
       return newFolder;
     } catch (err) {
