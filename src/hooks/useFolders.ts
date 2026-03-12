@@ -50,7 +50,7 @@ export function useFolders() {
       try {
         const { data: foldersData, error: foldersError } = await supabase
           .from("folders")
-          .select("id, name, created_at")
+          .select("id, name, created_at, prompt_hint")
           .order("created_at", { ascending: true });
 
         if (foldersError) throw foldersError;
