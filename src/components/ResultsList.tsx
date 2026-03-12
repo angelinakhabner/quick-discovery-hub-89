@@ -8,9 +8,9 @@ interface ResultsListProps {
 }
 
 const filterLabels: Record<TimeFilter, string> = {
-  today: "Dziś",
-  tomorrow: "Jutro",
-  next3days: "Najbliższe 3 dni",
+  today: "Today",
+  tomorrow: "Tomorrow",
+  next3days: "Next 3 days",
 };
 
 const ResultsList = ({ results, folderName, filter, onClose }: ResultsListProps) => {
