@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, X, Trash2 } from "lucide-react";
-import type { Folder, Source } from "@/lib/mock-data";
+import type { Folder } from "@/lib/mock-data";
 
 interface EditFolderModalProps {
   folder: Folder;
@@ -18,7 +18,6 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
   const [newCategory, setNewCategory] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Derive existing categories for suggestions
   const existingCategories = Array.from(
     new Set(folder.sources.map((s) => s.category).filter(Boolean))
   ) as string[];
@@ -83,27 +82,27 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
             {folder.sources.map((src) => (
               <div
                 key={src.url}
-                className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-background border border-border group"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-background border border-border group"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-heading font-medium text-foreground truncate">{src.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{src.url}</p>
-                  <input
-                    type="text"
-                    value={src.category || ""}
-                    onChange={(e) => onUpdateSourceCategory(src.url, e.target.value)}
-                    placeholder="category"
-                    list={`cat-${src.url}`}
-                    className="mt-1 w-full px-2 py-1 text-xs bg-muted text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
-                  />
-                  {existingCategories.length > 0 && (
-                    <datalist id={`cat-${src.url}`}>
-                      {existingCategories.map((c) => (
-                        <option key={c} value={c} />
-                      ))}
-                    </datalist>
-                  )}
                 </div>
+                <input
+                  type="text"
+                  value={src.category || ""}
+                  onChange={(e) => onUpdateSourceCategory(src.url, e.target.value)}
+                  placeholder="category"
+                  list={`cat-${src.url}`}
+                  className="w-20 shrink-0 px-2 py-1 text-xs bg-muted text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+                />
+                {existingCategories.length > 0 && (
+                  <datalist id={`cat-${src.url}`}>
+                    {existingCategories.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                )}
                 <button
                   onClick={() => onRemoveSource(src.url)}
                   className="shrink-0 p-1 text-muted-foreground hover:text-destructive transition-colors"
@@ -114,37 +113,34 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
               </div>
             ))}
           </div>
+          {/* Add source row */}
           <div className="flex gap-2">
-            <div className="flex-1 space-y-1.5">
-              <input
-                type="text"
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSource(); } }}
-                placeholder="example.com/events"
-                className="w-full px-4 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-              <input
-                type="text"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSource(); } }}
-                placeholder="category (optional)"
-                list="new-cat-suggestions"
-                className="w-full px-4 py-2 text-xs bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-              {existingCategories.length > 0 && (
-                <datalist id="new-cat-suggestions">
-                  {existingCategories.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
-              )}
-            </div>
+            <input
+              type="text"
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSource(); } }}
+              placeholder="example.com/events"
+              className="flex-1 px-3 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <input
+              type="text"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSource(); } }}
+              placeholder="category"
+              list="edit-new-cat"
+              className="w-20 shrink-0 px-3 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            {existingCategories.length > 0 && (
+              <datalist id="edit-new-cat">
+                {existingCategories.map((c) => <option key={c} value={c} />)}
+              </datalist>
+            )}
             <button
               onClick={handleAddSource}
               disabled={!newUrl.trim()}
-              className="self-start px-4 py-2.5 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="px-3 py-2.5 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               <Plus size={16} />
             </button>
