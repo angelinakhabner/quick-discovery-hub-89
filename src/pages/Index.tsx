@@ -95,7 +95,20 @@ const Index = () => {
     }
   }, [activeFolder, selectedVenues, afterTime, fetchResults]);
 
-  const handleCreateFolder = useCallback((name: string, urls: string[]) => {
+  const handleVenueChange = useCallback((category: string | null) => {
+    setSelectedVenues(category);
+    if (activeFolder) {
+      fetchResults(activeFolder, activeFilter, category, afterTime);
+    }
+  }, [activeFolder, activeFilter, afterTime, fetchResults]);
+
+  const handleAfterTimeChange = useCallback((time: string) => {
+    setAfterTime(time);
+    if (activeFolder) {
+      fetchResults(activeFolder, activeFilter, selectedVenues, time);
+    }
+  }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
+
     const newFolder: Folder = {
       id: crypto.randomUUID(),
       name,
