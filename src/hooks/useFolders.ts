@@ -216,5 +216,5 @@ export function useFolders() {
     }
   }, []);
 
-  return { folders, isLoadingFolders, createFolder, addSource, removeSource, renameFolder, deleteFolder };
+  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder };
 }
