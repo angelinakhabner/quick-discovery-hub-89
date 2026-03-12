@@ -9,7 +9,7 @@ import VenueFilter from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useFolders } from "@/hooks/useFolders";
 import AddFolderModal from "@/components/AddFolderModal";
-import { type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
+import { type Folder, type TimeFilter, type ResultItem, type DateFilterMode } from "@/lib/mock-data";
 import { scrapeEvents } from "@/lib/api/scrape-events";
 import { toast } from "sonner";
 
