@@ -73,6 +73,12 @@ const Index = () => {
     }
   }, []);
 
+  const defaultFilterForMode = (mode: DateFilterMode): TimeFilter => {
+    if (mode === "weekly") return "thisweek";
+    if (mode === "monthly") return "thismonth";
+    return "today";
+  };
+
   const handleFolderSelect = useCallback((id: string) => {
     if (activeFolderId === id) {
       setActiveFolderId(null);
@@ -82,9 +88,11 @@ const Index = () => {
     setActiveFolderId(id);
     const folder = folders.find((f) => f.id === id);
     if (folder) {
-      fetchResults(folder, activeFilter, selectedVenues, afterTime);
+      const filter = defaultFilterForMode(folder.dateFilterMode);
+      setActiveFilter(filter);
+      fetchResults(folder, filter, selectedVenues, afterTime);
     }
-  }, [activeFolderId, folders, activeFilter, selectedVenues, afterTime, fetchResults]);
+  }, [activeFolderId, folders, selectedVenues, afterTime, fetchResults]);
 
   const handleFilterSelect = useCallback((filter: TimeFilter) => {
     setActiveFilter(filter);
