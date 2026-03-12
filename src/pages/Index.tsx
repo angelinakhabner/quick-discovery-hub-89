@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
@@ -17,6 +17,7 @@ const Index = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [results, setResults] = useState<ResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [afterTime, setAfterTime] = useState("");
 
   // Cache: folderId-filter -> results
   const cache = useRef<Record<string, ResultItem[]>>({});
@@ -24,6 +25,15 @@ const Index = () => {
   const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "there";
 
   const activeFolder = folders.find((f) => f.id === activeFolderId);
+
+  const filteredResults = useMemo(() => {
+    if (!afterTime) return results;
+    return results.filter((item) => {
+      if (!item.time) return true;
+      const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
+      return eventTime >= afterTime;
+    });
+  }, [results, afterTime]);
 
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
     const cacheKey = `${folder.id}-${filter}`;
@@ -142,7 +152,12 @@ const Index = () => {
         {/* Content area */}
         {activeFolderId ? (
           <>
-            <TimeFilters active={activeFilter} onSelect={handleFilterSelect} />
+            <TimeFilters
+              active={activeFilter}
+              onSelect={handleFilterSelect}
+              afterTime={afterTime}
+              onAfterTimeChange={setAfterTime}
+            />
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
                 <Loader2 size={24} className="text-primary animate-spin" />
@@ -151,7 +166,7 @@ const Index = () => {
                 </p>
               </div>
             ) : (
-              <EventList results={results} />
+              <EventList results={filteredResults} />
             )}
           </>
         ) : (
