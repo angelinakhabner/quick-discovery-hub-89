@@ -13,8 +13,9 @@ interface EditFolderModalProps {
   onClose: () => void;
 }
 
-const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpdateSourceCategory, onDelete, onClose }: EditFolderModalProps) => {
+const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpdateSourceCategory, onUpdatePromptHint, onDelete, onClose }: EditFolderModalProps) => {
   const [name, setName] = useState(folder.name);
+  const [promptHint, setPromptHint] = useState(folder.promptHint || "");
   const [newUrl, setNewUrl] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
