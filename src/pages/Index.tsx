@@ -3,7 +3,7 @@ import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
-import SourcesBar from "@/components/SourcesBar";
+import { EditSourcesModal, SourcesIndicator } from "@/components/EditSourcesModal";
 import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
@@ -19,6 +19,7 @@ const Index = () => {
   const [results, setResults] = useState<ResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [afterTime, setAfterTime] = useState("");
+  const [showEditSources, setShowEditSources] = useState(false);
 
   // Cache: folderId-filter -> results
   const cache = useRef<Record<string, ResultItem[]>>({});
@@ -181,10 +182,9 @@ const Index = () => {
         {/* Content area */}
         {activeFolderId && activeFolder ? (
           <>
-            <SourcesBar
+            <SourcesIndicator
               sources={activeFolder.sources}
-              onAddSource={handleAddSource}
-              onRemoveSource={handleRemoveSource}
+              onEdit={() => setShowEditSources(true)}
             />
             <TimeFilters
               active={activeFilter}
@@ -219,6 +219,16 @@ const Index = () => {
         <AddFolderModal
           onCreateFolder={handleCreateFolder}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {showEditSources && activeFolder && (
+        <EditSourcesModal
+          folderName={activeFolder.name}
+          sources={activeFolder.sources}
+          onAddSource={handleAddSource}
+          onRemoveSource={handleRemoveSource}
+          onClose={() => setShowEditSources(false)}
         />
       )}
     </div>
