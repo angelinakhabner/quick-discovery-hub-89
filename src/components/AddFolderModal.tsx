@@ -39,7 +39,8 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
     if (!name.trim()) return;
     onCreateFolder(
       name.trim(),
-      sources.map((s) => ({ url: s.url, category: s.category || undefined }))
+      sources.map((s) => ({ url: s.url, category: s.category || undefined })),
+      promptHint.trim() || undefined
     );
   };
 
