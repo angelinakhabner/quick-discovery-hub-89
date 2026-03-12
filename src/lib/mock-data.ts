@@ -12,6 +12,7 @@ export type Folder = {
   name: string;
   sources: Source[];
   promptHint?: string;
+  dateFilterMode: DateFilterMode;
 };
 
 export type ResultItem = {
