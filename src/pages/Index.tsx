@@ -221,6 +221,16 @@ const Index = () => {
           onClose={() => setShowAddModal(false)}
         />
       )}
+
+      {showEditSources && activeFolder && (
+        <EditSourcesModal
+          folderName={activeFolder.name}
+          sources={activeFolder.sources}
+          onAddSource={handleAddSource}
+          onRemoveSource={handleRemoveSource}
+          onClose={() => setShowEditSources(false)}
+        />
+      )}
     </div>
   );
 };
