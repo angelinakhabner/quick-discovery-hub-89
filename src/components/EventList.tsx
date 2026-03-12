@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ExternalLink, Calendar } from "lucide-react";
 import type { ResultItem } from "@/lib/mock-data";
 import { downloadICS, getGoogleCalendarUrl } from "@/lib/calendar";
@@ -9,6 +9,8 @@ interface EventListProps {
 
 const EventList = ({ results }: EventListProps) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [calendarOpenIndex, setCalendarOpenIndex] = useState<number | null>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   if (results.length === 0) {
     return (
