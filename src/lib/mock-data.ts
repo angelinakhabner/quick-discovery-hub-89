@@ -3,6 +3,7 @@ export type TimeFilter = "today" | "tomorrow" | "next3days";
 export type Source = {
   url: string;
   name: string;
+  category?: string;
 };
 
 export type Folder = {

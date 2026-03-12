@@ -72,7 +72,7 @@ export function useFolders() {
           name: f.name,
           sources: (sourcesData || [])
             .filter((s) => s.folder_id === f.id)
-            .map((s) => ({ url: s.url, name: s.name })),
+            .map((s) => ({ url: s.url, name: s.name, category: s.category || undefined })),
         }));
 
         setFolders(mapped);
