@@ -143,7 +143,12 @@ const Index = () => {
         {/* Content area */}
         {activeFolderId ? (
           <>
-            <TimeFilters active={activeFilter} onSelect={handleFilterSelect} />
+            <TimeFilters
+              active={activeFilter}
+              onSelect={handleFilterSelect}
+              afterTime={afterTime}
+              onAfterTimeChange={setAfterTime}
+            />
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
                 <Loader2 size={24} className="text-primary animate-spin" />
@@ -152,7 +157,7 @@ const Index = () => {
                 </p>
               </div>
             ) : (
-              <EventList results={results} />
+              <EventList results={filteredResults} />
             )}
           </>
         ) : (
