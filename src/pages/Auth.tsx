@@ -75,7 +75,7 @@ const Auth = () => {
           {!isLogin && (
             <div>
               <label className="block text-xs font-heading font-medium text-muted-foreground mb-1">
-                Nazwa wyświetlana
+                Display name
               </label>
               <input
                 type="text"
