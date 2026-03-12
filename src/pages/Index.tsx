@@ -109,6 +109,7 @@ const Index = () => {
     }
   }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
+  const handleCreateFolder = useCallback((name: string, urls: string[]) => {
     const newFolder: Folder = {
       id: crypto.randomUUID(),
       name,
