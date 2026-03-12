@@ -1,0 +1,1 @@
+ALTER TABLE public.folders ADD COLUMN date_filter_mode text NOT NULL DEFAULT 'daily';

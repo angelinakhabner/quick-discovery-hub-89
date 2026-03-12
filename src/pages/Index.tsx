@@ -9,13 +9,13 @@ import VenueFilter from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useFolders } from "@/hooks/useFolders";
 import AddFolderModal from "@/components/AddFolderModal";
-import { type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
+import { type Folder, type TimeFilter, type ResultItem, type DateFilterMode } from "@/lib/mock-data";
 import { scrapeEvents } from "@/lib/api/scrape-events";
 import { toast } from "sonner";
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint } = useFolders();
+  const { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint, updateDateFilterMode } = useFolders();
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -73,6 +73,12 @@ const Index = () => {
     }
   }, []);
 
+  const defaultFilterForMode = (mode: DateFilterMode): TimeFilter => {
+    if (mode === "weekly") return "thisweek";
+    if (mode === "monthly") return "thismonth";
+    return "today";
+  };
+
   const handleFolderSelect = useCallback((id: string) => {
     if (activeFolderId === id) {
       setActiveFolderId(null);
@@ -82,9 +88,11 @@ const Index = () => {
     setActiveFolderId(id);
     const folder = folders.find((f) => f.id === id);
     if (folder) {
-      fetchResults(folder, activeFilter, selectedVenues, afterTime);
+      const filter = defaultFilterForMode(folder.dateFilterMode);
+      setActiveFilter(filter);
+      fetchResults(folder, filter, selectedVenues, afterTime);
     }
-  }, [activeFolderId, folders, activeFilter, selectedVenues, afterTime, fetchResults]);
+  }, [activeFolderId, folders, selectedVenues, afterTime, fetchResults]);
 
   const handleFilterSelect = useCallback((filter: TimeFilter) => {
     setActiveFilter(filter);
@@ -107,22 +115,37 @@ const Index = () => {
     }
   }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
-  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string) => {
-    const newFolder = await createFolder(name, sources, promptHint);
+  const handleCreateFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string, dateFilterMode?: DateFilterMode) => {
+    const newFolder = await createFolder(name, sources, promptHint, dateFilterMode);
     if (newFolder) {
       setActiveFolderId(newFolder.id);
       setShowAddModal(false);
-      fetchResults(newFolder, activeFilter, selectedVenues, afterTime);
+      const filter = defaultFilterForMode(newFolder.dateFilterMode);
+      setActiveFilter(filter);
+      fetchResults(newFolder, filter, selectedVenues, afterTime);
     }
-  }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
+  }, [createFolder, selectedVenues, afterTime, fetchResults]);
 
   const handleUpdatePromptHint = useCallback(async (id: string, hint: string) => {
     await updatePromptHint(id, hint);
-    // Invalidate cache for this folder
     Object.keys(cache.current).forEach((key) => {
       if (key.startsWith(id)) delete cache.current[key];
     });
   }, [updatePromptHint]);
+
+  const handleUpdateDateFilterMode = useCallback(async (id: string, mode: DateFilterMode) => {
+    await updateDateFilterMode(id, mode);
+    Object.keys(cache.current).forEach((key) => {
+      if (key.startsWith(id)) delete cache.current[key];
+    });
+    // Reset filter to default for new mode
+    const filter = defaultFilterForMode(mode);
+    setActiveFilter(filter);
+    const folder = folders.find((f) => f.id === id);
+    if (folder && activeFolderId === id) {
+      fetchResults({ ...folder, dateFilterMode: mode }, filter, selectedVenues, afterTime);
+    }
+  }, [updateDateFilterMode, folders, activeFolderId, selectedVenues, afterTime, fetchResults]);
 
   const handleAddSource = useCallback(async (url: string, category?: string) => {
     if (!editingFolderId) return;
@@ -236,6 +259,7 @@ const Index = () => {
               onSelect={handleFilterSelect}
               afterTime={afterTime}
               onAfterTimeChange={handleAfterTimeChange}
+              mode={activeFolder.dateFilterMode}
             />
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
@@ -279,6 +303,7 @@ const Index = () => {
           onRemoveSource={handleRemoveSource}
           onUpdateSourceCategory={handleUpdateSourceCategory}
           onUpdatePromptHint={handleUpdatePromptHint}
+          onUpdateDateFilterMode={handleUpdateDateFilterMode}
           onDelete={handleDeleteFolder}
           onClose={() => setEditingFolderId(null)}
         />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
+import type { DateFilterMode } from "@/lib/mock-data";
 
 interface SourceEntry {
   url: string;
@@ -7,13 +8,20 @@ interface SourceEntry {
 }
 
 interface AddFolderModalProps {
-  onCreateFolder: (name: string, sources: { url: string; category?: string }[], promptHint?: string) => void;
+  onCreateFolder: (name: string, sources: { url: string; category?: string }[], promptHint?: string, dateFilterMode?: DateFilterMode) => void;
   onClose: () => void;
 }
+
+const modeOptions: { label: string; value: DateFilterMode }[] = [
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
+];
 
 const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
   const [name, setName] = useState("");
   const [promptHint, setPromptHint] = useState("");
+  const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>("daily");
   const [sources, setSources] = useState<SourceEntry[]>([]);
   const [newUrl, setNewUrl] = useState("");
   const [newCategory, setNewCategory] = useState("");
@@ -40,13 +48,14 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
     onCreateFolder(
       name.trim(),
       sources.map((s) => ({ url: s.url, category: s.category || undefined })),
-      promptHint.trim() || undefined
+      promptHint.trim() || undefined,
+      dateFilterMode
     );
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm">
-      <div className="bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl crossfade-enter">
+      <div className="bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl crossfade-enter max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-heading font-bold text-xl text-card-foreground">New Folder</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">✕</button>
@@ -64,6 +73,29 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
               autoFocus
               className="w-full px-4 py-3 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
+          </div>
+
+          {/* Date range mode */}
+          <div>
+            <label className="block text-sm font-heading font-medium text-card-foreground mb-1">
+              Date range
+            </label>
+            <div className="flex gap-1.5">
+              {modeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setDateFilterMode(opt.value)}
+                  className={`flex-1 px-2 py-2 text-xs font-heading font-medium rounded-xl border transition-colors ${
+                    dateFilterMode === opt.value
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-foreground border-border hover:border-primary/40"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Content filter */}

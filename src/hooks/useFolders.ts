@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { defaultFolders, type Folder, type Source } from "@/lib/mock-data";
+import { defaultFolders, type Folder, type Source, type DateFilterMode } from "@/lib/mock-data";
 
 export function useFolders() {
   const { user } = useAuth();
@@ -50,7 +50,7 @@ export function useFolders() {
       try {
         const { data: foldersData, error: foldersError } = await supabase
           .from("folders")
-          .select("id, name, created_at, prompt_hint")
+          .select("id, name, created_at, prompt_hint, date_filter_mode")
           .order("created_at", { ascending: true });
 
         if (foldersError) throw foldersError;
@@ -71,6 +71,7 @@ export function useFolders() {
           id: f.id,
           name: f.name,
           promptHint: f.prompt_hint || undefined,
+          dateFilterMode: (f.date_filter_mode as DateFilterMode) || "daily",
           sources: (sourcesData || [])
             .filter((s) => s.folder_id === f.id)
             .map((s) => ({ url: s.url, name: s.name, category: s.category || undefined })),
@@ -88,14 +89,14 @@ export function useFolders() {
     loadFolders();
   }, [user]);
 
-  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string): Promise<Folder | null> => {
+  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string, dateFilterMode?: DateFilterMode): Promise<Folder | null> => {
     if (!user) return null;
 
     try {
       const { data: folder, error: folderError } = await supabase
         .from("folders")
-        .insert({ name, user_id: user.id, prompt_hint: promptHint || null })
-        .select("id, name, prompt_hint")
+        .insert({ name, user_id: user.id, prompt_hint: promptHint || null, date_filter_mode: dateFilterMode || "daily" })
+        .select("id, name, prompt_hint, date_filter_mode")
         .single();
 
       if (folderError) throw folderError;
@@ -114,7 +115,7 @@ export function useFolders() {
         if (sourcesError) throw sourcesError;
       }
 
-      const newFolder: Folder = { id: folder.id, name: folder.name, sources: mappedSources, promptHint: folder.prompt_hint || undefined };
+      const newFolder: Folder = { id: folder.id, name: folder.name, sources: mappedSources, promptHint: folder.prompt_hint || undefined, dateFilterMode: (folder.date_filter_mode as DateFilterMode) || "daily" };
       setFolders((prev) => [...prev, newFolder]);
       return newFolder;
     } catch (err) {
@@ -234,5 +235,21 @@ export function useFolders() {
     }
   }, []);
 
-  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint };
+  const updateDateFilterMode = useCallback(async (folderId: string, mode: DateFilterMode) => {
+    try {
+      const { error } = await supabase
+        .from("folders")
+        .update({ date_filter_mode: mode })
+        .eq("id", folderId);
+      if (error) throw error;
+      setFolders((prev) =>
+        prev.map((f) => (f.id === folderId ? { ...f, dateFilterMode: mode } : f))
+      );
+    } catch (err) {
+      console.error("Error updating date filter mode:", err);
+      toast.error("Failed to update date filter mode");
+    }
+  }, []);
+
+  return { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint, updateDateFilterMode };
 }

@@ -1,4 +1,5 @@
-export type TimeFilter = "today" | "tomorrow" | "next3days";
+export type DateFilterMode = "daily" | "weekly" | "monthly";
+export type TimeFilter = "today" | "tomorrow" | "next3days" | "thisweek" | "nextweek" | "thismonth" | "nextmonth";
 
 export type Source = {
   url: string;
@@ -11,6 +12,7 @@ export type Folder = {
   name: string;
   sources: Source[];
   promptHint?: string;
+  dateFilterMode: DateFilterMode;
 };
 
 export type ResultItem = {
@@ -43,10 +45,12 @@ export const defaultFolders: Folder[] = [
     id: "leisure",
     name: "leisure",
     sources: leisureSources,
+    dateFilterMode: "daily",
   },
   {
     id: "ngo-jobs",
     name: "jobs in NGO's",
+    dateFilterMode: "monthly",
     sources: [
       { url: "pracuj.pl", name: "Pracuj.pl" },
       { url: "ngo.pl/praca", name: "NGO.pl Praca" },
