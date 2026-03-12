@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
