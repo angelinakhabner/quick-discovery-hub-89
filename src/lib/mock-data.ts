@@ -1,4 +1,5 @@
-export type TimeFilter = "today" | "tomorrow" | "next3days";
+export type DateFilterMode = "daily" | "weekly" | "monthly";
+export type TimeFilter = "today" | "tomorrow" | "next3days" | "thisweek" | "nextweek" | "thismonth" | "nextmonth";
 
 export type Source = {
   url: string;
