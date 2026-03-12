@@ -57,7 +57,7 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
               type="submit"
               className="flex-1 px-4 py-3 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
             >
-              Utwórz folder
+              Create Folder
             </button>
             <button
               type="button"
