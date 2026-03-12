@@ -86,7 +86,7 @@ const Index = () => {
     if (folder) {
       fetchResults(folder, activeFilter, selectedVenues, afterTime);
     }
-  }, [activeFolderId, folders, activeFilter, fetchResults]);
+  }, [activeFolderId, folders, activeFilter, selectedVenues, afterTime, fetchResults]);
 
   const handleFilterSelect = useCallback((filter: TimeFilter) => {
     setActiveFilter(filter);
