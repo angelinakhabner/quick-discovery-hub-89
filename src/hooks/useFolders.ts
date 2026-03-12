@@ -95,8 +95,8 @@ export function useFolders() {
     try {
       const { data: folder, error: folderError } = await supabase
         .from("folders")
-        .insert({ name, user_id: user.id, prompt_hint: promptHint || null })
-        .select("id, name, prompt_hint")
+        .insert({ name, user_id: user.id, prompt_hint: promptHint || null, date_filter_mode: dateFilterMode || "daily" })
+        .select("id, name, prompt_hint, date_filter_mode")
         .single();
 
       if (folderError) throw folderError;
