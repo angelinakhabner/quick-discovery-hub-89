@@ -94,7 +94,7 @@ const EventList = ({ results }: EventListProps) => {
                   <div className="text-xs font-heading space-y-1 sm:space-y-1.5 text-muted-foreground sm:text-right sm:min-w-[160px]">
                     {item.director && (
                       <p>
-                        <span className="font-medium text-foreground">Reż.</span> {item.director}
+                        <span className="font-medium text-foreground">Dir.</span> {item.director}
                       </p>
                     )}
                     {item.cast && (
