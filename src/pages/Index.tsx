@@ -4,7 +4,7 @@ import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
 import { EditSourcesModal, SourcesIndicator } from "@/components/EditSourcesModal";
-import VenueFilter from "@/components/VenueFilter";
+import VenueFilter, { venueCategories } from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
@@ -21,7 +21,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [afterTime, setAfterTime] = useState("");
   const [showEditSources, setShowEditSources] = useState(false);
-  const [selectedVenues, setSelectedVenues] = useState<Set<string>>(new Set());
+  const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
 
   // Cache: folderId-filter -> results
   const cache = useRef<Record<string, ResultItem[]>>({});
@@ -33,9 +33,12 @@ const Index = () => {
   const filteredResults = useMemo(() => {
     let filtered = results;
 
-    // Venue filter
-    if (selectedVenues.size > 0) {
-      filtered = filtered.filter((item) => selectedVenues.has(item.venue));
+    // Venue category filter
+    if (selectedVenues) {
+      const cat = venueCategories.find((c) => c.label === selectedVenues);
+      if (cat) {
+        filtered = filtered.filter((item) => cat.venues.includes(item.venue));
+      }
     }
 
     // Time filter
