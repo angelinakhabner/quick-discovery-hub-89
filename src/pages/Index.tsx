@@ -211,7 +211,7 @@ const Index = () => {
           <>
             <SourcesIndicator
               sources={activeFolder.sources}
-              onEdit={() => setEditingFolder(activeFolder)}
+              onEdit={() => setEditingFolderId(activeFolder.id)}
             />
             <VenueFilter selected={selectedVenues} onChange={handleVenueChange} />
             <TimeFilters
