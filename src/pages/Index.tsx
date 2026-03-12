@@ -6,14 +6,15 @@ import EventList from "@/components/EventList";
 import { EditSourcesModal, SourcesIndicator } from "@/components/EditSourcesModal";
 import VenueFilter, { venueCategories } from "@/components/VenueFilter";
 import { useAuth } from "@/hooks/useAuth";
+import { useFolders } from "@/hooks/useFolders";
 import AddFolderModal from "@/components/AddFolderModal";
-import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
+import { type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
 import { scrapeEvents } from "@/lib/api/scrape-events";
 import { toast } from "sonner";
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const [folders, setFolders] = useState<Folder[]>(defaultFolders);
+  const { folders, isLoadingFolders, createFolder, addSource, removeSource } = useFolders();
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -30,11 +31,9 @@ const Index = () => {
 
   const activeFolder = folders.find((f) => f.id === activeFolderId);
 
-  // No more client-side filtering needed — filters are applied before scraping
   const filteredResults = results;
 
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter, venueCategory: string | null, timeAfter: string) => {
-    // Filter sources by venue category
     let sourcesToScrape = folder.sources;
     if (venueCategory) {
       const cat = venueCategories.find((c) => c.label === venueCategory);
@@ -109,48 +108,30 @@ const Index = () => {
     }
   }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
-  const handleCreateFolder = useCallback((name: string, urls: string[]) => {
-    const newFolder: Folder = {
-      id: crypto.randomUUID(),
-      name,
-      sources: urls.map((url) => ({
-        url,
-        name: url.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-      })),
-    };
-    setFolders((prev) => [...prev, newFolder]);
-    setActiveFolderId(newFolder.id);
-    setShowAddModal(false);
-    fetchResults(newFolder, activeFilter, selectedVenues, afterTime);
-  }, [activeFilter, selectedVenues, afterTime, fetchResults]);
+  const handleCreateFolder = useCallback(async (name: string, urls: string[]) => {
+    const newFolder = await createFolder(name, urls);
+    if (newFolder) {
+      setActiveFolderId(newFolder.id);
+      setShowAddModal(false);
+      fetchResults(newFolder, activeFilter, selectedVenues, afterTime);
+    }
+  }, [createFolder, activeFilter, selectedVenues, afterTime, fetchResults]);
 
-  const handleAddSource = useCallback((url: string) => {
+  const handleAddSource = useCallback(async (url: string) => {
     if (!activeFolderId) return;
-    const source = { url, name: url.replace(/^https?:\/\//, "").replace(/\/$/, "") };
-    setFolders((prev) =>
-      prev.map((f) =>
-        f.id === activeFolderId ? { ...f, sources: [...f.sources, source] } : f
-      )
-    );
-    // Clear cache for this folder so next fetch includes new source
+    await addSource(activeFolderId, url);
     Object.keys(cache.current).forEach((key) => {
       if (key.startsWith(activeFolderId)) delete cache.current[key];
     });
-  }, [activeFolderId]);
+  }, [activeFolderId, addSource]);
 
-  const handleRemoveSource = useCallback((url: string) => {
+  const handleRemoveSource = useCallback(async (url: string) => {
     if (!activeFolderId) return;
-    setFolders((prev) =>
-      prev.map((f) =>
-        f.id === activeFolderId
-          ? { ...f, sources: f.sources.filter((s) => s.url !== url) }
-          : f
-      )
-    );
+    await removeSource(activeFolderId, url);
     Object.keys(cache.current).forEach((key) => {
       if (key.startsWith(activeFolderId)) delete cache.current[key];
     });
-  }, [activeFolderId]);
+  }, [activeFolderId, removeSource]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -195,12 +176,19 @@ const Index = () => {
           <p className="text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
             Folders
           </p>
-          <FolderTabs
-            folders={folders}
-            activeFolderId={activeFolderId}
-            onSelect={handleFolderSelect}
-            onAddNew={() => setShowAddModal(true)}
-          />
+          {isLoadingFolders ? (
+            <div className="flex items-center gap-2 py-4">
+              <Loader2 size={16} className="text-muted-foreground animate-spin" />
+              <span className="text-muted-foreground text-sm">Loading folders…</span>
+            </div>
+          ) : (
+            <FolderTabs
+              folders={folders}
+              activeFolderId={activeFolderId}
+              onSelect={handleFolderSelect}
+              onAddNew={() => setShowAddModal(true)}
+            />
+          )}
         </section>
 
         {/* Content area */}
@@ -228,16 +216,20 @@ const Index = () => {
               <EventList results={filteredResults} />
             )}
           </>
-        ) : (
+        ) : !isLoadingFolders ? (
           <div className="text-center py-12 sm:py-16">
             <p className="text-muted-foreground font-body text-sm sm:text-base mb-1">
-              Select a folder above to browse events
+              {folders.length === 0
+                ? "Create your first folder to get started"
+                : "Select a folder above to browse events"}
             </p>
             <p className="text-muted-foreground/60 font-body text-xs sm:text-sm">
-              or create a new one with your own sources
+              {folders.length === 0
+                ? "Add source URLs to track events from your favorite venues"
+                : "or create a new one with your own sources"}
             </p>
           </div>
-        )}
+        ) : null}
       </div>
 
       {showAddModal && (
