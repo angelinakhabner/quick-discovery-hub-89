@@ -3,6 +3,7 @@ import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
+import SourcesBar from "@/components/SourcesBar";
 import { useAuth } from "@/hooks/useAuth";
 import AddFolderModal from "@/components/AddFolderModal";
 import { defaultFolders, type Folder, type TimeFilter, type ResultItem } from "@/lib/mock-data";
@@ -98,6 +99,34 @@ const Index = () => {
     fetchResults(newFolder, activeFilter);
   }, [activeFilter, fetchResults]);
 
+  const handleAddSource = useCallback((url: string) => {
+    if (!activeFolderId) return;
+    const source = { url, name: url.replace(/^https?:\/\//, "").replace(/\/$/, "") };
+    setFolders((prev) =>
+      prev.map((f) =>
+        f.id === activeFolderId ? { ...f, sources: [...f.sources, source] } : f
+      )
+    );
+    // Clear cache for this folder so next fetch includes new source
+    Object.keys(cache.current).forEach((key) => {
+      if (key.startsWith(activeFolderId)) delete cache.current[key];
+    });
+  }, [activeFolderId]);
+
+  const handleRemoveSource = useCallback((url: string) => {
+    if (!activeFolderId) return;
+    setFolders((prev) =>
+      prev.map((f) =>
+        f.id === activeFolderId
+          ? { ...f, sources: f.sources.filter((s) => s.url !== url) }
+          : f
+      )
+    );
+    Object.keys(cache.current).forEach((key) => {
+      if (key.startsWith(activeFolderId)) delete cache.current[key];
+    });
+  }, [activeFolderId]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-10 pb-16">
@@ -150,8 +179,13 @@ const Index = () => {
         </section>
 
         {/* Content area */}
-        {activeFolderId ? (
+        {activeFolderId && activeFolder ? (
           <>
+            <SourcesBar
+              sources={activeFolder.sources}
+              onAddSource={handleAddSource}
+              onRemoveSource={handleRemoveSource}
+            />
             <TimeFilters
               active={activeFilter}
               onSelect={handleFilterSelect}
