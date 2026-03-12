@@ -17,6 +17,7 @@ const Index = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [results, setResults] = useState<ResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [afterTime, setAfterTime] = useState("");
 
   // Cache: folderId-filter -> results
   const cache = useRef<Record<string, ResultItem[]>>({});
