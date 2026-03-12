@@ -159,6 +159,7 @@ const Index = () => {
               <h1 className="text-2xl sm:text-3xl text-foreground italic leading-tight">"moze pojdziemy do kina/teatru/na koncert?"</h1>
               <span className="text-xs text-muted-foreground">at 17:53 on a random tuesday</span>
             </div>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowAddModal(true)}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-heading font-semibold rounded-full bg-primary text-primary-foreground hover:opacity-95 transition-opacity"
