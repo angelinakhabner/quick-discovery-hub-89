@@ -154,12 +154,11 @@ const Index = () => {
         {/* Header */}
         <header className="mb-8 sm:mb-12">
           <div className="flex items-center justify-between mb-1">
-            <h1 className="font-display text-base sm:text-lg text-foreground leading-snug">
-              <span className="text-muted-foreground text-xs not-italic">to my girlfriend saying</span>
-              <span className="block italic">"moze pojdziemy do kina/teatru/na koncert?"</span>
-              <span className="block text-xs text-muted-foreground not-italic">at 17:53 on a random tuesday</span>
-            </h1>
-            <div className="flex items-center gap-2">
+            <div className="font-display">
+              <span className="text-xs text-muted-foreground">to my girlfriend saying</span>
+              <h1 className="text-2xl sm:text-3xl text-foreground italic leading-tight">"moze pojdziemy do kina/teatru/na koncert?"</h1>
+              <span className="text-xs text-muted-foreground">at 17:53 on a random tuesday</span>
+            </div>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-heading font-semibold rounded-full bg-primary text-primary-foreground hover:opacity-95 transition-opacity"
