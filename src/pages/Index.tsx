@@ -91,7 +91,7 @@ const Index = () => {
   const handleFilterSelect = useCallback((filter: TimeFilter) => {
     setActiveFilter(filter);
     if (activeFolder) {
-      fetchResults(activeFolder, filter);
+      fetchResults(activeFolder, filter, selectedVenues, afterTime);
     }
   }, [activeFolder, fetchResults]);
 
