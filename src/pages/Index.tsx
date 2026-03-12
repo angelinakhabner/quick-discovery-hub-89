@@ -33,9 +33,12 @@ const Index = () => {
   const filteredResults = useMemo(() => {
     let filtered = results;
 
-    // Venue filter
-    if (selectedVenues.size > 0) {
-      filtered = filtered.filter((item) => selectedVenues.has(item.venue));
+    // Venue category filter
+    if (selectedVenues) {
+      const cat = venueCategories.find((c) => c.label === selectedVenues);
+      if (cat) {
+        filtered = filtered.filter((item) => cat.venues.includes(item.venue));
+      }
     }
 
     // Time filter
