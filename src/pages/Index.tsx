@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder } = useFolders();
+  const { folders, isLoadingFolders, createFolder, addSource, removeSource, updateSourceCategory, renameFolder, deleteFolder, updatePromptHint } = useFolders();
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("today");
   const [showAddModal, setShowAddModal] = useState(false);
