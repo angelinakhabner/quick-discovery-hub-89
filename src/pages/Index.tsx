@@ -31,13 +31,24 @@ const Index = () => {
   const activeFolder = folders.find((f) => f.id === activeFolderId);
 
   const filteredResults = useMemo(() => {
-    if (!afterTime) return results;
-    return results.filter((item) => {
-      if (!item.time) return true;
-      const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
-      return eventTime >= afterTime;
-    });
-  }, [results, afterTime]);
+    let filtered = results;
+
+    // Venue filter
+    if (selectedVenues.size > 0) {
+      filtered = filtered.filter((item) => selectedVenues.has(item.venue));
+    }
+
+    // Time filter
+    if (afterTime) {
+      filtered = filtered.filter((item) => {
+        if (!item.time) return true;
+        const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
+        return eventTime >= afterTime;
+      });
+    }
+
+    return filtered;
+  }, [results, afterTime, selectedVenues]);
 
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
     const cacheKey = `${folder.id}-${filter}`;
