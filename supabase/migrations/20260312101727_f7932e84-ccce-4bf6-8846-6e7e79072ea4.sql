@@ -1,0 +1,1 @@
+ALTER TABLE public.folders ADD COLUMN prompt_hint text;
