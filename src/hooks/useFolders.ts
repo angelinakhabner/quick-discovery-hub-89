@@ -28,8 +28,8 @@ export function useFolders() {
         if (foldersError) throw foldersError;
 
         if (!foldersData?.length) {
-          setFolders([]);
-          setIsLoadingFolders(false);
+          // Seed default folders for new users
+          await seedDefaultFolders(user.id);
           return;
         }
 
