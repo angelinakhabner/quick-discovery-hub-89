@@ -21,7 +21,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [afterTime, setAfterTime] = useState("");
   const [showEditSources, setShowEditSources] = useState(false);
-  const [selectedVenues, setSelectedVenues] = useState<Set<string>>(new Set());
+  const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
 
   // Cache: folderId-filter -> results
   const cache = useRef<Record<string, ResultItem[]>>({});
