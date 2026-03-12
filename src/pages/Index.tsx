@@ -108,8 +108,8 @@ const Index = () => {
               >
                 <Plus size={14} className="sm:hidden" />
                 <Plus size={16} className="hidden sm:block" />
-                <span className="hidden sm:inline">Nowy folder</span>
-                <span className="sm:hidden">Nowy</span>
+                <span className="hidden sm:inline">New Folder</span>
+                <span className="sm:hidden">New</span>
               </button>
               <button
                 onClick={signOut}
@@ -122,14 +122,14 @@ const Index = () => {
             </div>
           </div>
           <p className="text-muted-foreground font-body text-xs sm:text-sm">
-            Witaj, <span className="text-foreground font-medium">{displayName}</span> 👋
+            Hi, <span className="text-foreground font-medium">{displayName}</span> 👋
           </p>
         </header>
 
         {/* Folders */}
         <section className="mb-6 sm:mb-8">
           <p className="text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
-            Foldery
+            Folders
           </p>
           <FolderTabs
             folders={folders}
@@ -147,7 +147,7 @@ const Index = () => {
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
                 <Loader2 size={24} className="text-primary animate-spin" />
                 <p className="text-muted-foreground font-body text-sm">
-                  Przeszukuję {activeFolder?.sources.length} źródeł…
+                  Scanning {activeFolder?.sources.length} sources…
                 </p>
               </div>
             ) : (
@@ -157,10 +157,10 @@ const Index = () => {
         ) : (
           <div className="text-center py-12 sm:py-16">
             <p className="text-muted-foreground font-body text-sm sm:text-base mb-1">
-              Wybierz folder powyżej, aby przeglądać wydarzenia
+              Select a folder above to browse events
             </p>
             <p className="text-muted-foreground/60 font-body text-xs sm:text-sm">
-              lub utwórz nowy z własnymi źródłami
+              or create a new one with your own sources
             </p>
           </div>
         )}

@@ -23,26 +23,26 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm">
       <div className="bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl crossfade-enter">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-heading font-bold text-xl text-card-foreground">Nowy folder</h2>
+          <h2 className="font-heading font-bold text-xl text-card-foreground">New Folder</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-heading font-medium text-card-foreground mb-1">
-              Nazwa tematu
+              Topic name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="np. Jazz w Warszawie"
+              placeholder="e.g. Jazz in Warsaw"
               autoFocus
               className="w-full px-4 py-3 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
           <div>
             <label className="block text-sm font-heading font-medium text-card-foreground mb-1">
-              Źródła (jeden URL na linię)
+              Sources (one URL per line)
             </label>
             <textarea
               value={urls}
@@ -57,14 +57,14 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
               type="submit"
               className="flex-1 px-4 py-3 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
             >
-              Utwórz folder
+              Create Folder
             </button>
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-3 text-sm font-heading font-medium rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
             >
-              Anuluj
+              Cancel
             </button>
           </div>
         </form>
