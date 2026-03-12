@@ -274,6 +274,12 @@ const Index = () => {
         />
       )}
 
+      <footer className="fixed bottom-0 left-0 right-0 py-3 text-center">
+        <p className="font-display italic text-[10px] text-muted-foreground/50">
+          "moze pojdziemy do kina/teatru/na koncert?" — 17:53, a random tuesday
+        </p>
+      </footer>
+
     </div>
   );
 };
