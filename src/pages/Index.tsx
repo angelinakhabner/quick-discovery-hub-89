@@ -33,8 +33,22 @@ const Index = () => {
   // No more client-side filtering needed — filters are applied before scraping
   const filteredResults = results;
 
-  const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
-    const cacheKey = `${folder.id}-${filter}`;
+  const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter, venueCategory: string | null, timeAfter: string) => {
+    // Filter sources by venue category
+    let sourcesToScrape = folder.sources;
+    if (venueCategory) {
+      const cat = venueCategories.find((c) => c.label === venueCategory);
+      if (cat) {
+        sourcesToScrape = folder.sources.filter((s) => cat.venues.includes(s.name));
+      }
+    }
+
+    if (sourcesToScrape.length === 0) {
+      setResults([]);
+      return;
+    }
+
+    const cacheKey = `${folder.id}-${filter}-${venueCategory || 'all'}-${timeAfter || 'any'}`;
     if (cache.current[cacheKey]) {
       setResults(cache.current[cacheKey]);
       return;
@@ -44,7 +58,7 @@ const Index = () => {
     setResults([]);
 
     try {
-      const response = await scrapeEvents(folder.sources, filter);
+      const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined);
       if (response.success && response.data) {
         cache.current[cacheKey] = response.data;
         setResults(response.data);
