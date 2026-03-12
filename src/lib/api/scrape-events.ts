@@ -3,10 +3,11 @@ import type { ResultItem, Source, TimeFilter } from '@/lib/mock-data';
 
 export async function scrapeEvents(
   sources: Source[],
-  filter: TimeFilter
+  filter: TimeFilter,
+  afterTime?: string
 ): Promise<{ success: boolean; data?: ResultItem[]; error?: string }> {
   const { data, error } = await supabase.functions.invoke('scrape-events', {
-    body: { sources, filter },
+    body: { sources, filter, afterTime: afterTime || undefined },
   });
 
   if (error) {
