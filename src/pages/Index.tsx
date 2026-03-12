@@ -84,7 +84,7 @@ const Index = () => {
     setActiveFolderId(id);
     const folder = folders.find((f) => f.id === id);
     if (folder) {
-      fetchResults(folder, activeFilter);
+      fetchResults(folder, activeFilter, selectedVenues, afterTime);
     }
   }, [activeFolderId, folders, activeFilter, fetchResults]);
 
