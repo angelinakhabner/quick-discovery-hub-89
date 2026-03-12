@@ -115,7 +115,7 @@ export function useFolders() {
         if (sourcesError) throw sourcesError;
       }
 
-      const newFolder: Folder = { id: folder.id, name: folder.name, sources: mappedSources, promptHint: folder.prompt_hint || undefined };
+      const newFolder: Folder = { id: folder.id, name: folder.name, sources: mappedSources, promptHint: folder.prompt_hint || undefined, dateFilterMode: (folder.date_filter_mode as DateFilterMode) || "daily" };
       setFolders((prev) => [...prev, newFolder]);
       return newFolder;
     } catch (err) {
