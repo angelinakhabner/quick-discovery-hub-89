@@ -128,11 +128,24 @@ const Index = () => {
 
   const handleUpdatePromptHint = useCallback(async (id: string, hint: string) => {
     await updatePromptHint(id, hint);
-    // Invalidate cache for this folder
     Object.keys(cache.current).forEach((key) => {
       if (key.startsWith(id)) delete cache.current[key];
     });
   }, [updatePromptHint]);
+
+  const handleUpdateDateFilterMode = useCallback(async (id: string, mode: DateFilterMode) => {
+    await updateDateFilterMode(id, mode);
+    Object.keys(cache.current).forEach((key) => {
+      if (key.startsWith(id)) delete cache.current[key];
+    });
+    // Reset filter to default for new mode
+    const filter = defaultFilterForMode(mode);
+    setActiveFilter(filter);
+    const folder = folders.find((f) => f.id === id);
+    if (folder && activeFolderId === id) {
+      fetchResults({ ...folder, dateFilterMode: mode }, filter, selectedVenues, afterTime);
+    }
+  }, [updateDateFilterMode, folders, activeFolderId, selectedVenues, afterTime, fetchResults]);
 
   const handleAddSource = useCallback(async (url: string, category?: string) => {
     if (!editingFolderId) return;
