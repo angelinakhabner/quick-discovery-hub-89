@@ -93,7 +93,7 @@ const Index = () => {
     if (activeFolder) {
       fetchResults(activeFolder, filter, selectedVenues, afterTime);
     }
-  }, [activeFolder, fetchResults]);
+  }, [activeFolder, selectedVenues, afterTime, fetchResults]);
 
   const handleCreateFolder = useCallback((name: string, urls: string[]) => {
     const newFolder: Folder = {
