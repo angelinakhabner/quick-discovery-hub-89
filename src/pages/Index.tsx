@@ -122,7 +122,7 @@ const Index = () => {
             </div>
           </div>
           <p className="text-muted-foreground font-body text-xs sm:text-sm">
-            Witaj, <span className="text-foreground font-medium">{displayName}</span> 👋
+            Hi, <span className="text-foreground font-medium">{displayName}</span> 👋
           </p>
         </header>
 
