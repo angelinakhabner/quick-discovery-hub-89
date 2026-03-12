@@ -12,6 +12,17 @@ const EventList = ({ results }: EventListProps) => {
   const [calendarOpenIndex, setCalendarOpenIndex] = useState<number | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
 
+  // Close calendar dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setCalendarOpenIndex(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   if (results.length === 0) {
     return (
       <p className="text-muted-foreground font-body text-center py-12">
