@@ -11,7 +11,7 @@ interface FolderTabsProps {
 
 const FolderTabs = ({ folders, activeFolderId, onSelect, onEdit }: FolderTabsProps) => {
   return (
-    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+    <div className="flex flex-wrap gap-2">
       {folders.map((folder) => {
         const isActive = activeFolderId === folder.id;
 
@@ -19,14 +19,14 @@ const FolderTabs = ({ folders, activeFolderId, onSelect, onEdit }: FolderTabsPro
           <div key={folder.id} className="relative group">
             <button
               onClick={() => onSelect(folder.id)}
-              className={`px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-heading font-medium rounded-full transition-colors pr-8 sm:pr-9 ${
+              className={`px-4 py-2 text-xs font-heading font-medium tracking-wide rounded-full transition-all pr-8 ${
                 isActive
                   ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                  : "bg-secondary text-secondary-foreground hover:text-foreground border border-border"
               }`}
             >
               {folder.name}
-              <span className="ml-1 text-xs opacity-60">
+              <span className={`ml-1.5 text-[10px] ${isActive ? "opacity-50" : "opacity-40"}`}>
                 {folder.sources.length}
               </span>
             </button>
@@ -36,12 +36,12 @@ const FolderTabs = ({ folders, activeFolderId, onSelect, onEdit }: FolderTabsPro
                 e.stopPropagation();
                 onEdit(folder);
               }}
-              className={`absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${
-                isActive ? "text-background/60 hover:text-background" : "text-muted-foreground hover:text-foreground"
+              className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${
+                isActive ? "text-background/50 hover:text-background" : "text-muted-foreground hover:text-foreground"
               }`}
               aria-label={`Edit ${folder.name}`}
             >
-              <Pencil size={12} />
+              <Pencil size={11} />
             </button>
           </div>
         );

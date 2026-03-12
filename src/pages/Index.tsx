@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
+import { Plus, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
 import EventList from "@/components/EventList";
@@ -25,7 +25,6 @@ const Index = () => {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
 
-  // Cache: folderId-filter -> results
   const cache = useRef<Record<string, ResultItem[]>>({});
 
   const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "there";
@@ -138,7 +137,6 @@ const Index = () => {
     Object.keys(cache.current).forEach((key) => {
       if (key.startsWith(id)) delete cache.current[key];
     });
-    // Reset filter to default for new mode
     const filter = defaultFilterForMode(mode);
     setActiveFilter(filter);
     const folder = folders.find((f) => f.id === id);
@@ -185,51 +183,45 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-10 pb-16">
+      <div className="max-w-2xl mx-auto px-5 pt-8 sm:pt-14 pb-20">
         {/* Header */}
-        <header className="mb-6 sm:mb-10">
-          <div className="flex items-center justify-between mb-1 sm:mb-2">
+        <header className="mb-10 sm:mb-14">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="font-serif-display text-4xl sm:text-5xl italic text-foreground tracking-tight">
+              Whatsön
+            </h1>
             <div className="flex items-center gap-2">
-              <Sparkles size={22} className="text-primary sm:hidden" />
-              <Sparkles size={28} className="text-primary hidden sm:block" />
-              <h1 className="font-heading font-bold text-2xl sm:text-3xl tracking-tight text-foreground">
-                Whatsön
-              </h1>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-heading font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-heading font-medium tracking-wide uppercase rounded-full border border-border text-foreground hover:bg-secondary transition-colors"
               >
-                <Plus size={14} className="sm:hidden" />
-                <Plus size={16} className="hidden sm:block" />
+                <Plus size={14} />
                 <span className="hidden sm:inline">New Folder</span>
                 <span className="sm:hidden">New</span>
               </button>
               <button
                 onClick={signOut}
-                className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Sign out"
               >
-                <LogOut size={16} className="sm:hidden" />
-                <LogOut size={18} className="hidden sm:block" />
+                <LogOut size={16} />
               </button>
             </div>
           </div>
-          <p className="text-muted-foreground font-body text-xs sm:text-sm">
-            Hi, <span className="text-foreground font-medium">{displayName}</span> 👋
+          <p className="text-muted-foreground font-heading text-sm tracking-wide">
+            Welcome back, <span className="text-foreground">{displayName}</span>
           </p>
         </header>
 
         {/* Folders */}
-        <section className="mb-6 sm:mb-8">
-          <p className="text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
-            Folders
+        <section className="mb-8 sm:mb-10">
+          <p className="text-[10px] font-heading font-medium text-muted-foreground uppercase tracking-[0.2em] mb-3">
+            Collections
           </p>
           {isLoadingFolders ? (
-            <div className="flex items-center gap-2 py-4">
-              <Loader2 size={16} className="text-muted-foreground animate-spin" />
-              <span className="text-muted-foreground text-sm">Loading folders…</span>
+            <div className="flex items-center gap-2 py-6">
+              <Loader2 size={14} className="text-muted-foreground animate-spin" />
+              <span className="text-muted-foreground text-xs tracking-wide">Loading…</span>
             </div>
           ) : (
             <FolderTabs
@@ -262,9 +254,9 @@ const Index = () => {
               mode={activeFolder.dateFilterMode}
             />
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
-                <Loader2 size={24} className="text-primary animate-spin" />
-                <p className="text-muted-foreground font-body text-sm">
+              <div className="flex flex-col items-center justify-center py-20 gap-3 crossfade-enter">
+                <Loader2 size={20} className="text-muted-foreground animate-spin" />
+                <p className="text-muted-foreground font-heading text-xs tracking-wide">
                   Scanning sources…
                 </p>
               </div>
@@ -273,16 +265,16 @@ const Index = () => {
             )}
           </>
         ) : !isLoadingFolders ? (
-          <div className="text-center py-12 sm:py-16">
-            <p className="text-muted-foreground font-body text-sm sm:text-base mb-1">
+          <div className="text-center py-20">
+            <p className="font-serif-display text-xl italic text-muted-foreground mb-2">
               {folders.length === 0
-                ? "Create your first folder to get started"
-                : "Select a folder above to browse events"}
+                ? "Begin your collection"
+                : "Select a collection"}
             </p>
-            <p className="text-muted-foreground/60 font-body text-xs sm:text-sm">
+            <p className="text-muted-foreground font-heading text-xs tracking-wide">
               {folders.length === 0
-                ? "Add source URLs to track events from your favorite venues"
-                : "or create a new one with your own sources"}
+                ? "Create a folder and add source URLs to discover events"
+                : "Choose a folder above to browse its events"}
             </p>
           </div>
         ) : null}

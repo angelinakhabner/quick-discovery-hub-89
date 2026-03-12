@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Auth = () => {
@@ -44,14 +43,13 @@ const Auth = () => {
       } else {
         setMessage({
           type: "success",
-          text: "Check your email for a verification link to complete your sign up.",
+          text: "Check your email for a verification link.",
         });
       }
     }
     setLoading(false);
   };
 
-  // Load remembered email on mount
   useState(() => {
     const remembered = localStorage.getItem("whatson_remember");
     if (remembered) {
@@ -60,21 +58,21 @@ const Auth = () => {
     }
   });
 
+  const inputClass = "w-full px-3 py-2.5 text-xs bg-transparent text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30";
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-5">
       <div className="w-full max-w-sm">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5 mb-8 justify-center">
-          <Sparkles size={24} className="text-primary" />
-          <span className="font-heading font-bold text-2xl tracking-tight text-foreground">
+        <div className="mb-10 text-center">
+          <h1 className="font-serif-display text-4xl italic text-foreground tracking-tight">
             Whatsön
-          </span>
+          </h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-xs font-heading font-medium text-muted-foreground mb-1">
+              <label className="block text-[10px] font-heading font-medium text-muted-foreground uppercase tracking-[0.2em] mb-1.5">
                 Display name
               </label>
               <input
@@ -82,12 +80,12 @@ const Auth = () => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your name"
-                className="w-full px-4 py-2.5 text-sm bg-card text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className={inputClass}
               />
             </div>
           )}
           <div>
-            <label className="block text-xs font-heading font-medium text-muted-foreground mb-1">
+            <label className="block text-[10px] font-heading font-medium text-muted-foreground uppercase tracking-[0.2em] mb-1.5">
               Email
             </label>
             <input
@@ -96,11 +94,11 @@ const Auth = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="you@example.com"
-              className="w-full px-4 py-2.5 text-sm bg-card text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-xs font-heading font-medium text-muted-foreground mb-1">
+            <label className="block text-[10px] font-heading font-medium text-muted-foreground uppercase tracking-[0.2em] mb-1.5">
               Password
             </label>
             <input
@@ -110,25 +108,24 @@ const Auth = () => {
               required
               minLength={6}
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 text-sm bg-card text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
 
-          {/* Remember me */}
           {isLogin && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-primary"
+                className="w-3.5 h-3.5 rounded border-border text-foreground focus:ring-ring accent-foreground"
               />
-              <span className="text-xs font-heading text-muted-foreground">Remember me</span>
+              <span className="text-[10px] font-heading text-muted-foreground tracking-wide">Remember me</span>
             </label>
           )}
 
           {message && (
-            <p className={`text-sm font-heading ${message.type === "error" ? "text-destructive" : "text-primary"}`}>
+            <p className={`text-xs font-heading tracking-wide ${message.type === "error" ? "text-destructive" : "text-foreground/70"}`}>
               {message.text}
             </p>
           )}
@@ -136,17 +133,17 @@ const Auth = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 text-sm font-heading font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="w-full py-2.5 text-xs font-heading font-medium tracking-wide uppercase rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity disabled:opacity-40"
           >
             {loading ? "…" : isLogin ? "Sign in" : "Create account"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground font-heading mt-6">
+        <p className="text-center text-[11px] text-muted-foreground font-heading mt-8 tracking-wide">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => { setIsLogin(!isLogin); setMessage(null); }}
-            className="text-primary hover:underline font-medium"
+            className="text-foreground hover:underline underline-offset-4"
           >
             {isLogin ? "Sign up" : "Sign in"}
           </button>
