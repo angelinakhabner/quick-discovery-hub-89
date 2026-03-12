@@ -88,14 +88,14 @@ export function useFolders() {
     loadFolders();
   }, [user]);
 
-  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[]): Promise<Folder | null> => {
+  const createFolder = useCallback(async (name: string, sources: { url: string; category?: string }[], promptHint?: string): Promise<Folder | null> => {
     if (!user) return null;
 
     try {
       const { data: folder, error: folderError } = await supabase
         .from("folders")
-        .insert({ name, user_id: user.id })
-        .select("id, name")
+        .insert({ name, user_id: user.id, prompt_hint: promptHint || null })
+        .select("id, name, prompt_hint")
         .single();
 
       if (folderError) throw folderError;
