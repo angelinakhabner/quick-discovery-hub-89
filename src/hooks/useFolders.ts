@@ -63,7 +63,7 @@ export function useFolders() {
 
         const { data: sourcesData, error: sourcesError } = await supabase
           .from("folder_sources")
-          .select("id, folder_id, url, name");
+          .select("id, folder_id, url, name, category");
 
         if (sourcesError) throw sourcesError;
 
