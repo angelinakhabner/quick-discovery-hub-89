@@ -28,42 +28,40 @@ const EditSourcesModal = ({ folderName, sources, onAddSource, onRemoveSource, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm">
-      <div className="bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl crossfade-enter">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4 border border-border crossfade-enter">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="font-heading font-bold text-xl text-card-foreground">Edit Sources</h2>
-            <p className="text-sm text-muted-foreground font-heading mt-0.5">{folderName}</p>
+            <h2 className="font-heading font-semibold text-lg text-foreground">Edit Sources</h2>
+            <p className="text-xs text-muted-foreground font-heading mt-0.5 tracking-wide">{folderName}</p>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">✕</button>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-sm">✕</button>
         </div>
 
-        {/* Source list */}
-        <div className="space-y-2 mb-5 max-h-60 overflow-y-auto">
+        <div className="space-y-1.5 mb-5 max-h-60 overflow-y-auto">
           {sources.length === 0 && (
-            <p className="text-sm text-muted-foreground font-body py-4 text-center">No sources yet.</p>
+            <p className="text-xs text-muted-foreground font-heading py-6 text-center tracking-wide">No sources yet.</p>
           )}
           {sources.map((src) => (
             <div
               key={src.url}
-              className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-background border border-border group"
+              className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-secondary border border-border group"
             >
               <div className="min-w-0">
-                <p className="text-sm font-heading font-medium text-foreground truncate">{src.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{src.url}</p>
+                <p className="text-xs font-heading font-medium text-foreground truncate">{src.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{src.url}</p>
               </div>
               <button
                 onClick={() => onRemoveSource(src.url)}
                 className="shrink-0 p-1 text-muted-foreground hover:text-destructive transition-colors"
                 aria-label={`Remove ${src.name}`}
               >
-                <X size={14} />
+                <X size={12} />
               </button>
             </div>
           ))}
         </div>
 
-        {/* Add new */}
         <div className="flex gap-2">
           <input
             type="text"
@@ -71,21 +69,21 @@ const EditSourcesModal = ({ folderName, sources, onAddSource, onRemoveSource, on
             onChange={(e) => setNewUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="example.com/events"
-            className="flex-1 px-4 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="flex-1 px-3 py-2.5 text-xs bg-transparent text-foreground rounded-lg border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30"
           />
           <button
             onClick={handleAdd}
             disabled={!newUrl.trim()}
-            className="px-4 py-2.5 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+            className="px-3 py-2.5 text-xs font-heading font-medium rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity disabled:opacity-30"
           >
-            <Plus size={16} />
+            <Plus size={14} />
           </button>
         </div>
 
         <div className="mt-6">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 text-sm font-heading font-medium rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
+            className="w-full px-4 py-2.5 text-xs font-heading font-medium tracking-wide rounded-lg bg-secondary text-foreground hover:bg-accent transition-colors"
           >
             Done
           </button>
@@ -97,7 +95,6 @@ const EditSourcesModal = ({ folderName, sources, onAddSource, onRemoveSource, on
 
 export { EditSourcesModal };
 
-// Compact inline source indicator with edit button
 interface SourcesIndicatorProps {
   sources: Source[];
   onEdit: () => void;
@@ -106,9 +103,9 @@ interface SourcesIndicatorProps {
 export const SourcesIndicator = ({ sources, onEdit }: SourcesIndicatorProps) => (
   <button
     onClick={onEdit}
-    className="flex items-center gap-1.5 px-3 py-1 text-xs font-heading text-muted-foreground hover:text-foreground rounded-full border border-border hover:border-primary/40 transition-colors mb-4 sm:mb-6"
+    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-heading font-medium tracking-wide text-muted-foreground hover:text-foreground rounded-full border border-border hover:border-foreground/30 transition-colors mb-4"
   >
-    <Settings2 size={12} />
+    <Settings2 size={11} />
     {sources.length} source{sources.length !== 1 ? "s" : ""}
   </button>
 );
