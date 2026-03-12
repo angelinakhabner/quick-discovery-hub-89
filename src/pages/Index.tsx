@@ -31,6 +31,7 @@ const Index = () => {
   const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "there";
 
   const activeFolder = folders.find((f) => f.id === activeFolderId);
+  const editingFolder = folders.find((f) => f.id === editingFolderId) || null;
 
   const filteredResults = results;
 
