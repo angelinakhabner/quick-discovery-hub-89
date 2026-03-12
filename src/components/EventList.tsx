@@ -87,7 +87,7 @@ const EventList = ({ results }: EventListProps) => {
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                   {/* Description */}
                   <p className="text-xs sm:text-sm font-body text-foreground/80 leading-relaxed">
-                    {item.description || "Brak opisu."}
+                    {item.description || "No description."}
                   </p>
 
                   {/* Meta column */}
