@@ -253,13 +253,14 @@ const Index = () => {
         />
       )}
 
-      {showEditSources && activeFolder && (
-        <EditSourcesModal
-          folderName={activeFolder.name}
-          sources={activeFolder.sources}
+      {editingFolder && (
+        <EditFolderModal
+          folder={editingFolder}
+          onRename={handleRenameFolder}
           onAddSource={handleAddSource}
           onRemoveSource={handleRemoveSource}
-          onClose={() => setShowEditSources(false)}
+          onDelete={handleDeleteFolder}
+          onClose={() => setEditingFolder(null)}
         />
       )}
     </div>
