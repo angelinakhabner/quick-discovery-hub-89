@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Plus, Sparkles, LogOut, Loader2 } from "lucide-react";
 import FolderTabs from "@/components/FolderTabs";
 import TimeFilters from "@/components/TimeFilters";
@@ -30,31 +30,25 @@ const Index = () => {
 
   const activeFolder = folders.find((f) => f.id === activeFolderId);
 
-  const filteredResults = useMemo(() => {
-    let filtered = results;
+  // No more client-side filtering needed — filters are applied before scraping
+  const filteredResults = results;
 
-    // Venue category filter
-    if (selectedVenues) {
-      const cat = venueCategories.find((c) => c.label === selectedVenues);
+  const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter, venueCategory: string | null, timeAfter: string) => {
+    // Filter sources by venue category
+    let sourcesToScrape = folder.sources;
+    if (venueCategory) {
+      const cat = venueCategories.find((c) => c.label === venueCategory);
       if (cat) {
-        filtered = filtered.filter((item) => cat.venues.includes(item.venue));
+        sourcesToScrape = folder.sources.filter((s) => cat.venues.includes(s.name));
       }
     }
 
-    // Time filter
-    if (afterTime) {
-      filtered = filtered.filter((item) => {
-        if (!item.time) return true;
-        const eventTime = item.time.replace(/[^\d:]/g, "").slice(0, 5);
-        return eventTime >= afterTime;
-      });
+    if (sourcesToScrape.length === 0) {
+      setResults([]);
+      return;
     }
 
-    return filtered;
-  }, [results, afterTime, selectedVenues]);
-
-  const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter) => {
-    const cacheKey = `${folder.id}-${filter}`;
+    const cacheKey = `${folder.id}-${filter}-${venueCategory || 'all'}-${timeAfter || 'any'}`;
     if (cache.current[cacheKey]) {
       setResults(cache.current[cacheKey]);
       return;
@@ -64,7 +58,7 @@ const Index = () => {
     setResults([]);
 
     try {
-      const response = await scrapeEvents(folder.sources, filter);
+      const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined);
       if (response.success && response.data) {
         cache.current[cacheKey] = response.data;
         setResults(response.data);
@@ -90,16 +84,30 @@ const Index = () => {
     setActiveFolderId(id);
     const folder = folders.find((f) => f.id === id);
     if (folder) {
-      fetchResults(folder, activeFilter);
+      fetchResults(folder, activeFilter, selectedVenues, afterTime);
     }
-  }, [activeFolderId, folders, activeFilter, fetchResults]);
+  }, [activeFolderId, folders, activeFilter, selectedVenues, afterTime, fetchResults]);
 
   const handleFilterSelect = useCallback((filter: TimeFilter) => {
     setActiveFilter(filter);
     if (activeFolder) {
-      fetchResults(activeFolder, filter);
+      fetchResults(activeFolder, filter, selectedVenues, afterTime);
     }
-  }, [activeFolder, fetchResults]);
+  }, [activeFolder, selectedVenues, afterTime, fetchResults]);
+
+  const handleVenueChange = useCallback((category: string | null) => {
+    setSelectedVenues(category);
+    if (activeFolder) {
+      fetchResults(activeFolder, activeFilter, category, afterTime);
+    }
+  }, [activeFolder, activeFilter, afterTime, fetchResults]);
+
+  const handleAfterTimeChange = useCallback((time: string) => {
+    setAfterTime(time);
+    if (activeFolder) {
+      fetchResults(activeFolder, activeFilter, selectedVenues, time);
+    }
+  }, [activeFolder, activeFilter, selectedVenues, fetchResults]);
 
   const handleCreateFolder = useCallback((name: string, urls: string[]) => {
     const newFolder: Folder = {
@@ -113,8 +121,8 @@ const Index = () => {
     setFolders((prev) => [...prev, newFolder]);
     setActiveFolderId(newFolder.id);
     setShowAddModal(false);
-    fetchResults(newFolder, activeFilter);
-  }, [activeFilter, fetchResults]);
+    fetchResults(newFolder, activeFilter, selectedVenues, afterTime);
+  }, [activeFilter, selectedVenues, afterTime, fetchResults]);
 
   const handleAddSource = useCallback((url: string) => {
     if (!activeFolderId) return;
@@ -202,12 +210,12 @@ const Index = () => {
               sources={activeFolder.sources}
               onEdit={() => setShowEditSources(true)}
             />
-            <VenueFilter selected={selectedVenues} onChange={setSelectedVenues} />
+            <VenueFilter selected={selectedVenues} onChange={handleVenueChange} />
             <TimeFilters
               active={activeFilter}
               onSelect={handleFilterSelect}
               afterTime={afterTime}
-              onAfterTimeChange={setAfterTime}
+              onAfterTimeChange={handleAfterTimeChange}
             />
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
