@@ -236,6 +236,7 @@ const Index = () => {
               onSelect={handleFilterSelect}
               afterTime={afterTime}
               onAfterTimeChange={handleAfterTimeChange}
+              mode={activeFolder.dateFilterMode}
             />
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 crossfade-enter">
