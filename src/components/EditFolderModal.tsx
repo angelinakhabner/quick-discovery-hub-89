@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, X, Trash2 } from "lucide-react";
-import type { Folder } from "@/lib/mock-data";
+import type { Folder, DateFilterMode } from "@/lib/mock-data";
 
 interface EditFolderModalProps {
   folder: Folder;
@@ -9,11 +9,18 @@ interface EditFolderModalProps {
   onRemoveSource: (url: string) => void;
   onUpdateSourceCategory: (url: string, category: string) => void;
   onUpdatePromptHint: (id: string, hint: string) => void;
+  onUpdateDateFilterMode: (id: string, mode: DateFilterMode) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
 }
 
-const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpdateSourceCategory, onUpdatePromptHint, onDelete, onClose }: EditFolderModalProps) => {
+const modeOptions: { label: string; value: DateFilterMode; description: string }[] = [
+  { label: "Daily", value: "daily", description: "Today / Tomorrow / 3 days + time filter" },
+  { label: "Weekly", value: "weekly", description: "This week / Next week" },
+  { label: "Monthly", value: "monthly", description: "This month / Next month" },
+];
+
+const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpdateSourceCategory, onUpdatePromptHint, onUpdateDateFilterMode, onDelete, onClose }: EditFolderModalProps) => {
   const [name, setName] = useState(folder.name);
   const [promptHint, setPromptHint] = useState(folder.promptHint || "");
   const [newUrl, setNewUrl] = useState("");
@@ -50,7 +57,7 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm">
-      <div className="bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl crossfade-enter">
+      <div className="bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl crossfade-enter max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-heading font-bold text-xl text-card-foreground">Edit Folder</h2>
@@ -70,6 +77,36 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleNameBlur(); (e.target as HTMLInputElement).blur(); } }}
             className="w-full px-4 py-2.5 text-sm bg-background text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
+        </div>
+
+        {/* Date filter mode */}
+        <div className="mb-6">
+          <label className="block text-xs font-heading font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+            Date range
+          </label>
+          <div className="flex gap-1.5">
+            {modeOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  if (opt.value !== folder.dateFilterMode) {
+                    onUpdateDateFilterMode(folder.id, opt.value);
+                  }
+                }}
+                className={`flex-1 px-2 py-2 text-xs font-heading font-medium rounded-xl border transition-colors ${
+                  folder.dateFilterMode === opt.value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background text-foreground border-border hover:border-primary/40"
+                }`}
+                title={opt.description}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 font-body">
+            {modeOptions.find((o) => o.value === folder.dateFilterMode)?.description}
+          </p>
         </div>
 
         {/* Content filter */}
@@ -111,10 +148,7 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
               <p className="text-sm text-muted-foreground font-body py-3 text-center">No sources yet.</p>
             )}
             {folder.sources.map((src) => (
-              <div
-                key={src.url}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-background border border-border group"
-              >
+              <div key={src.url} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-background border border-border group">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-heading font-medium text-foreground truncate">{src.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{src.url}</p>
@@ -129,16 +163,10 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
                 />
                 {existingCategories.length > 0 && (
                   <datalist id={`cat-${src.url}`}>
-                    {existingCategories.map((c) => (
-                      <option key={c} value={c} />
-                    ))}
+                    {existingCategories.map((c) => <option key={c} value={c} />)}
                   </datalist>
                 )}
-                <button
-                  onClick={() => onRemoveSource(src.url)}
-                  className="shrink-0 p-1 text-muted-foreground hover:text-destructive transition-colors"
-                  aria-label={`Remove ${src.name}`}
-                >
+                <button onClick={() => onRemoveSource(src.url)} className="shrink-0 p-1 text-muted-foreground hover:text-destructive transition-colors" aria-label={`Remove ${src.name}`}>
                   <X size={14} />
                 </button>
               </div>
@@ -168,11 +196,7 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
                 {existingCategories.map((c) => <option key={c} value={c} />)}
               </datalist>
             )}
-            <button
-              onClick={handleAddSource}
-              disabled={!newUrl.trim()}
-              className="px-3 py-2.5 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
-            >
+            <button onClick={handleAddSource} disabled={!newUrl.trim()} className="px-3 py-2.5 text-sm font-heading font-semibold rounded-xl bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-40">
               <Plus size={16} />
             </button>
           </div>
@@ -183,18 +207,13 @@ const EditFolderModal = ({ folder, onRename, onAddSource, onRemoveSource, onUpda
           <button
             onClick={handleDelete}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-heading font-medium rounded-xl transition-colors ${
-              confirmDelete
-                ? "bg-destructive text-destructive-foreground"
-                : "text-destructive hover:bg-destructive/10"
+              confirmDelete ? "bg-destructive text-destructive-foreground" : "text-destructive hover:bg-destructive/10"
             }`}
           >
             <Trash2 size={13} />
             {confirmDelete ? "Confirm Delete" : "Delete Folder"}
           </button>
-          <button
-            onClick={onClose}
-            className="px-5 py-2 text-sm font-heading font-medium rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
-          >
+          <button onClick={onClose} className="px-5 py-2 text-sm font-heading font-medium rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors">
             Done
           </button>
         </div>

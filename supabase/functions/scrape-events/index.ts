@@ -58,10 +58,31 @@ Deno.serve(async (req) => {
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
       dateDescription = `tomorrow, ${tomorrow.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-    } else {
+    } else if (filter === 'next3days') {
       const day3 = new Date(now);
       day3.setDate(day3.getDate() + 2);
       dateDescription = `today (${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })}) through ${day3.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    } else if (filter === 'thisweek') {
+      const dayOfWeek = now.getDay();
+      const endOfWeek = new Date(now);
+      endOfWeek.setDate(now.getDate() + (7 - dayOfWeek));
+      dateDescription = `this week, from ${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })} through ${endOfWeek.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    } else if (filter === 'nextweek') {
+      const dayOfWeek = now.getDay();
+      const startNextWeek = new Date(now);
+      startNextWeek.setDate(now.getDate() + (8 - dayOfWeek));
+      const endNextWeek = new Date(startNextWeek);
+      endNextWeek.setDate(startNextWeek.getDate() + 6);
+      dateDescription = `next week, from ${startNextWeek.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })} through ${endNextWeek.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    } else if (filter === 'thismonth') {
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      dateDescription = `this month, from ${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })} through ${endOfMonth.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    } else if (filter === 'nextmonth') {
+      const startNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const endNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+      dateDescription = `next month, from ${startNextMonth.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })} through ${endNextMonth.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    } else {
+      dateDescription = `today, ${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
     }
 
     console.log(`Scraping ${sources.length} sources for filter: ${filter}`);
