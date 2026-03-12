@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink, Calendar } from "lucide-react";
 import type { ResultItem } from "@/lib/mock-data";
+import { downloadICS, getGoogleCalendarUrl } from "@/lib/calendar";
 
 interface EventListProps {
   results: ResultItem[];
