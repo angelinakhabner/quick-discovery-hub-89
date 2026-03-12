@@ -273,6 +273,15 @@ const Index = () => {
           onClose={() => setEditingFolderId(null)}
         />
       )}
+
+      {/* Dedication */}
+      <footer className="max-w-2xl mx-auto px-5 pb-10 pt-4">
+        <p className="text-center text-xs text-muted-foreground/50 italic font-display">
+          Dla Ciebie — bo o 17:53 w losowy wtorek zapytałaś
+          <br />
+          „może pójdziemy do kina / teatru / na koncert?"
+        </p>
+      </footer>
     </div>
   );
 };
