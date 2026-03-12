@@ -29,7 +29,7 @@ const AddFolderModal = ({ onCreateFolder, onClose }: AddFolderModalProps) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-heading font-medium text-card-foreground mb-1">
-              Nazwa tematu
+              Topic name
             </label>
             <input
               type="text"
