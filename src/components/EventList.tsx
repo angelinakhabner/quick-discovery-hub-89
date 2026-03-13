@@ -104,10 +104,13 @@ const EventList = ({ results }: EventListProps) => {
               <span className="text-muted-foreground font-heading text-sm whitespace-nowrap hidden sm:inline">
                 {item.venue}
               </span>
+            </div>
 
-              <div className="flex items-center gap-1 shrink-0">
-                <div className="relative" ref={calendarOpenIndex === i ? calendarRef : undefined}>
-                  <button
+            {item.description && (
+              <p className="text-xs text-muted-foreground leading-relaxed truncate pl-5 -mt-1 mb-1 max-w-[85%]">
+                {item.description}
+              </p>
+            )}
                     onClick={(e) => {
                       e.stopPropagation();
                       setCalendarOpenIndex(calendarOpenIndex === i ? null : i);
