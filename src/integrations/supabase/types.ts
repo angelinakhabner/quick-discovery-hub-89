@@ -94,6 +94,36 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_cache: {
+        Row: {
+          cached_at: string
+          events: Json
+          expires_at: string
+          filter: string
+          id: string
+          prompt_hint: string | null
+          source_url: string
+        }
+        Insert: {
+          cached_at?: string
+          events?: Json
+          expires_at?: string
+          filter: string
+          id?: string
+          prompt_hint?: string | null
+          source_url: string
+        }
+        Update: {
+          cached_at?: string
+          events?: Json
+          expires_at?: string
+          filter?: string
+          id?: string
+          prompt_hint?: string | null
+          source_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
