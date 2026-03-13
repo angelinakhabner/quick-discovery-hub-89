@@ -45,23 +45,52 @@ const Index = () => {
     const cacheKey = `${folder.id}-${filter}-${venueCategory || 'all'}-${timeAfter || 'any'}`;
     if (cache.current[cacheKey]) {setResults(cache.current[cacheKey]);return;}
 
+    // Abort any in-flight requests
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     setResults([]);
     try {
-      const response = await scrapeEvents(sourcesToScrape, filter, timeAfter || undefined, folder.promptHint);
-      if (response.success && response.data) {
-        cache.current[cacheKey] = response.data;
-        setResults(response.data);
-      } else {
-        toast.error(response.error || "Failed to fetch events");
-        setResults([]);
+      const result = await scrapeEventsProgressive(
+        sourcesToScrape,
+        filter,
+        timeAfter || undefined,
+        folder.promptHint,
+        (partialEvents) => {
+          if (controller.signal.aborted) return;
+          // Append and sort progressively
+          setResults(prev => {
+            const merged = [...prev, ...partialEvents];
+            merged.sort((a, b) => {
+              const timeA = a.time.replace('—', '99:99');
+              const timeB = b.time.replace('—', '99:99');
+              return timeA.localeCompare(timeB);
+            });
+            return merged;
+          });
+          setIsLoading(false); // Show results as soon as first source arrives
+        },
+        controller.signal
+      );
+      if (!controller.signal.aborted && result.data.length > 0) {
+        cache.current[cacheKey] = result.data;
+        setResults(result.data);
+      }
+      if (result.errors.length > 0) {
+        console.warn("Some sources had errors:", result.errors);
       }
     } catch (err) {
-      console.error("Error fetching events:", err);
-      toast.error("Failed to fetch events. Please try again.");
-      setResults([]);
+      if (!controller.signal.aborted) {
+        console.error("Error fetching events:", err);
+        toast.error("Failed to fetch events. Please try again.");
+        setResults([]);
+      }
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
