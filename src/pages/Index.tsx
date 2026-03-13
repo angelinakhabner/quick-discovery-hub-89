@@ -54,6 +54,8 @@ const Index = () => {
 
     setIsLoading(true);
     setResults([]);
+    setSourcesTotal(sourcesToScrape.length);
+    setSourcesLoaded(0);
     try {
       const result = await scrapeEventsProgressive(
         sourcesToScrape,
