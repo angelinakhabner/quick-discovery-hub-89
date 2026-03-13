@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
       cast: evt.cast,
       duration: evt.duration,
       genre: evt.genre,
-      sourceUrl: formattedUrl,
+      sourceUrl: evt.link || formattedUrl,
     }));
 
     console.log(`Found ${events.length} events from ${source.name}`);
