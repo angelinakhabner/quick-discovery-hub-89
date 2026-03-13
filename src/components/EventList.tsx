@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { ChevronDown, ExternalLink, Calendar } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ChevronDown, ExternalLink, Calendar, Printer } from "lucide-react";
 import type { ResultItem } from "@/lib/mock-data";
 import { downloadICS, getGoogleCalendarUrl } from "@/lib/calendar";
 
