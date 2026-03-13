@@ -21,6 +21,8 @@ const Index = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [results, setResults] = useState<ResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sourcesTotal, setSourcesTotal] = useState(0);
+  const [sourcesLoaded, setSourcesLoaded] = useState(0);
   const [afterTime, setAfterTime] = useState("");
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
@@ -52,6 +54,8 @@ const Index = () => {
 
     setIsLoading(true);
     setResults([]);
+    setSourcesTotal(sourcesToScrape.length);
+    setSourcesLoaded(0);
     try {
       const result = await scrapeEventsProgressive(
         sourcesToScrape,
@@ -60,17 +64,18 @@ const Index = () => {
         folder.promptHint,
         (partialEvents) => {
           if (controller.signal.aborted) return;
-          // Append and sort progressively
-          setResults(prev => {
-            const merged = [...prev, ...partialEvents];
-            merged.sort((a, b) => {
-              const timeA = a.time.replace('—', '99:99');
-              const timeB = b.time.replace('—', '99:99');
-              return timeA.localeCompare(timeB);
+          setSourcesLoaded(prev => prev + 1);
+          if (partialEvents.length > 0) {
+            setResults(prev => {
+              const merged = [...prev, ...partialEvents];
+              merged.sort((a, b) => {
+                const timeA = a.time.replace('—', '99:99');
+                const timeB = b.time.replace('—', '99:99');
+                return timeA.localeCompare(timeB);
+              });
+              return merged;
             });
-            return merged;
-          });
-          setIsLoading(false); // Show results as soon as first source arrives
+          }
         },
         controller.signal
       );
@@ -250,16 +255,43 @@ const Index = () => {
             onAfterTimeChange={handleAfterTimeChange}
             mode={activeFolder.dateFilterMode} />
           
-            {isLoading ?
-          <div className="flex flex-col items-center justify-center py-20 gap-3 crossfade-enter">
+            {/* Loading indicator */}
+            {isLoading && sourcesLoaded < sourcesTotal && (
+              <div className="flex items-center gap-3 py-4 crossfade-enter">
+                <Loader2 size={14} className="text-primary animate-spin shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-muted-foreground text-xs font-heading">
+                      Scanning sources…
+                    </p>
+                    <p className="text-muted-foreground text-xs font-heading tabular-nums">
+                      {sourcesLoaded}/{sourcesTotal}
+                    </p>
+                  </div>
+                  <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${(sourcesLoaded / sourcesTotal) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Initial full-screen loader when no results yet */}
+            {isLoading && sourcesLoaded === 0 && results.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 crossfade-enter">
                 <Loader2 size={22} className="text-primary animate-spin" />
                 <p className="text-muted-foreground text-sm">
                   Scanning sources…
                 </p>
-              </div> :
+              </div>
+            )}
 
-          <EventList results={filteredResults} />
-          }
+            {/* Results */}
+            {(results.length > 0 || !isLoading) && (
+              <EventList results={filteredResults} />
+            )}
           </> :
         !isLoadingFolders ?
         <div className="text-center py-16 sm:py-20">
