@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { ChevronDown, ExternalLink, Calendar } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ChevronDown, ExternalLink, Calendar, Printer } from "lucide-react";
 import type { ResultItem } from "@/lib/mock-data";
 import { downloadICS, getGoogleCalendarUrl } from "@/lib/calendar";
 
@@ -22,6 +22,20 @@ const EventList = ({ results }: EventListProps) => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  const handlePrint = useCallback(() => {
+    const printContent = results.map((item) =>
+      `${item.time}  ${item.title}${item.venue ? `  —  ${item.venue}` : ''}${item.genre ? `  [${item.genre}]` : ''}`
+    ).join('\n');
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Events</title><style>
+      body { font-family: monospace; font-size: 12px; line-height: 1.8; padding: 24px; white-space: pre-wrap; }
+    </style></head><body>${printContent}</body></html>`);
+    printWindow.document.close();
+    printWindow.print();
+  }, [results]);
+
   if (results.length === 0) {
     return (
       <p className="text-muted-foreground text-center py-16 font-display text-xl italic">
@@ -32,6 +46,15 @@ const EventList = ({ results }: EventListProps) => {
 
   return (
     <div className="crossfade-enter">
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={handlePrint}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-heading font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+        >
+          <Printer size={12} />
+          Print
+        </button>
+      </div>
       {results.map((item, i) => {
         const isOpen = expandedIndex === i;
         return (
