@@ -164,6 +164,16 @@ const EventList = ({ results }: EventListProps) => {
               </div>
             </div>
 
+            {/* Short description preview */}
+            {!isOpen && item.description && (
+              <p
+                className="text-xs text-muted-foreground leading-relaxed truncate pl-6 -mt-2 mb-2 cursor-pointer"
+                onClick={() => setExpandedIndex(i)}
+              >
+                {item.description}
+              </p>
+            )}
+
             {isOpen && (
               <div className="pl-7 pr-2 pb-5 crossfade-enter">
                 <div className="flex items-center gap-2 mb-2 sm:hidden">
