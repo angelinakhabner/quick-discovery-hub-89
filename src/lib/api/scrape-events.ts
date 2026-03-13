@@ -40,10 +40,13 @@ export async function scrapeEventsProgressive(
     try {
       const result = await scrapeSingleSource(source, filter, afterTime, promptHint);
       if (signal?.aborted) return;
-      if (result.success && result.data) {
-        allEvents.push(...result.data);
-        onPartial?.(result.data, source.name);
+      if (result.success) {
+        if (result.data) {
+          allEvents.push(...result.data);
+        }
+        onPartial?.(result.data || [], source.name);
       } else if (result.error) {
+        onPartial?.([], source.name);
         errors.push(`${source.name}: ${result.error}`);
       }
     } catch (err) {
