@@ -22,14 +22,6 @@ const EventList = ({ results }: EventListProps) => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  if (results.length === 0) {
-    return (
-      <p className="text-muted-foreground text-center py-16 font-display text-xl italic">
-        Nothing found for this period.
-      </p>
-    );
-  }
-
   const handlePrint = useCallback(() => {
     const printContent = results.map((item) =>
       `${item.time}  ${item.title}${item.venue ? `  —  ${item.venue}` : ''}${item.genre ? `  [${item.genre}]` : ''}`
@@ -43,6 +35,14 @@ const EventList = ({ results }: EventListProps) => {
     printWindow.document.close();
     printWindow.print();
   }, [results]);
+
+  if (results.length === 0) {
+    return (
+      <p className="text-muted-foreground text-center py-16 font-display text-xl italic">
+        Nothing found for this period.
+      </p>
+    );
+  }
 
   return (
     <div className="crossfade-enter">
