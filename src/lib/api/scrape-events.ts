@@ -51,6 +51,7 @@ export async function scrapeEventsProgressive(
       }
     } catch (err) {
       if (signal?.aborted) return;
+      onPartial?.([], source.name);
       errors.push(`${source.name}: ${err instanceof Error ? err.message : 'Failed'}`);
     }
   });
