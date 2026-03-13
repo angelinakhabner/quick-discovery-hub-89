@@ -21,6 +21,8 @@ const Index = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [results, setResults] = useState<ResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sourcesTotal, setSourcesTotal] = useState(0);
+  const [sourcesLoaded, setSourcesLoaded] = useState(0);
   const [afterTime, setAfterTime] = useState("");
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
