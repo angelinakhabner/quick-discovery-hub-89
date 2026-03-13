@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
                     title: { type: 'string' },
                     time: { type: 'string', description: 'Start time in HH:MM format' },
                     date: { type: 'string', description: 'Date in format like "10 marca" (Polish locale)' },
+                    link: { type: 'string', description: 'The absolute URL to this specific event/film/show detail page (not the main listing page). Must start with http:// or https://.' },
                     description: { type: 'string', description: 'The actual plot synopsis or content description of the film/show/event — NOT the title or a label like "opis filmu". Write 1-3 sentences summarizing what the event is about.' },
                     director: { type: 'string' },
                     cast: { type: 'string' },
