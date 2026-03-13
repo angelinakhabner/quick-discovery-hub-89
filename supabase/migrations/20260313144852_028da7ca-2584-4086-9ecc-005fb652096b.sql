@@ -1,0 +1,1 @@
+UPDATE public.scrape_cache SET expires_at = now() - interval '1 minute'
