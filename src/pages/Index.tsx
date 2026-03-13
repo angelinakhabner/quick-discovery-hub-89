@@ -24,6 +24,7 @@ const Index = () => {
   const [afterTime, setAfterTime] = useState("");
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [selectedVenues, setSelectedVenues] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const cache = useRef<Record<string, ResultItem[]>>({});
 
