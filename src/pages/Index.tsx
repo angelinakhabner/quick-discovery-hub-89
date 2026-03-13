@@ -64,6 +64,7 @@ const Index = () => {
         folder.promptHint,
         (partialEvents) => {
           if (controller.signal.aborted) return;
+          setSourcesLoaded(prev => prev + 1);
           // Append and sort progressively
           setResults(prev => {
             const merged = [...prev, ...partialEvents];
@@ -74,7 +75,6 @@ const Index = () => {
             });
             return merged;
           });
-          setIsLoading(false); // Show results as soon as first source arrives
         },
         controller.signal
       );
