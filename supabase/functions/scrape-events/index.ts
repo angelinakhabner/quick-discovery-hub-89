@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
                     title: { type: 'string' },
                     time: { type: 'string', description: 'Start time in HH:MM format' },
                     date: { type: 'string', description: 'Date in format like "10 marca" (Polish locale)' },
+                    link: { type: 'string', description: 'The absolute URL to this specific event/film/show detail page (not the main listing page). Must start with http:// or https://.' },
                     description: { type: 'string', description: 'The actual plot synopsis or content description of the film/show/event — NOT the title or a label like "opis filmu". Write 1-3 sentences summarizing what the event is about.' },
                     director: { type: 'string' },
                     cast: { type: 'string' },
@@ -159,7 +160,7 @@ Deno.serve(async (req) => {
             },
             required: ['events'],
           },
-          prompt: `Extract all events/shows/performances happening ${dateDescription}.${afterTime ? ` Only include events starting at or after ${afterTime}.` : ''}${promptHint ? ` IMPORTANT: ${promptHint}.` : ''} Only include events within this date range. If no events match, return an empty array. For each event extract as much detail as possible.`,
+          prompt: `Extract all events/shows/performances happening ${dateDescription}.${afterTime ? ` Only include events starting at or after ${afterTime}.` : ''}${promptHint ? ` IMPORTANT: ${promptHint}.` : ''} Only include events within this date range. If no events match, return an empty array. For each event extract as much detail as possible, including the direct URL link to the specific event/film detail page (not the listing page).`,
         },
         onlyMainContent: true,
         waitFor: 2000,
@@ -187,7 +188,7 @@ Deno.serve(async (req) => {
       cast: evt.cast,
       duration: evt.duration,
       genre: evt.genre,
-      sourceUrl: formattedUrl,
+      sourceUrl: evt.link || formattedUrl,
     }));
 
     console.log(`Found ${events.length} events from ${source.name}`);
