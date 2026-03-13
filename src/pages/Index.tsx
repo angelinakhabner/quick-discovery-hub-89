@@ -65,16 +65,17 @@ const Index = () => {
         (partialEvents) => {
           if (controller.signal.aborted) return;
           setSourcesLoaded(prev => prev + 1);
-          // Append and sort progressively
-          setResults(prev => {
-            const merged = [...prev, ...partialEvents];
-            merged.sort((a, b) => {
-              const timeA = a.time.replace('—', '99:99');
-              const timeB = b.time.replace('—', '99:99');
-              return timeA.localeCompare(timeB);
+          if (partialEvents.length > 0) {
+            setResults(prev => {
+              const merged = [...prev, ...partialEvents];
+              merged.sort((a, b) => {
+                const timeA = a.time.replace('—', '99:99');
+                const timeB = b.time.replace('—', '99:99');
+                return timeA.localeCompare(timeB);
+              });
+              return merged;
             });
-            return merged;
-          });
+          }
         },
         controller.signal
       );
