@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
             },
             required: ['events'],
           },
-          prompt: `Extract all events/shows/performances happening ${dateDescription}.${afterTime ? ` Only include events starting at or after ${afterTime}.` : ''}${promptHint ? ` IMPORTANT: ${promptHint}.` : ''} Only include events within this date range. If no events match, return an empty array. For each event extract as much detail as possible.`,
+          prompt: `Extract all events/shows/performances happening ${dateDescription}.${afterTime ? ` Only include events starting at or after ${afterTime}.` : ''}${promptHint ? ` IMPORTANT: ${promptHint}.` : ''} Only include events within this date range. If no events match, return an empty array. For each event extract as much detail as possible, including the direct URL link to the specific event/film detail page (not the listing page).`,
         },
         onlyMainContent: true,
         waitFor: 2000,
