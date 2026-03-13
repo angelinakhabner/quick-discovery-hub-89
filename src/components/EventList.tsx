@@ -104,13 +104,10 @@ const EventList = ({ results }: EventListProps) => {
               <span className="text-muted-foreground font-heading text-sm whitespace-nowrap hidden sm:inline">
                 {item.venue}
               </span>
-            </div>
 
-            {item.description && (
-              <p className="text-xs text-muted-foreground leading-relaxed truncate pl-5 -mt-1 mb-1 max-w-[85%]">
-                {item.description}
-              </p>
-            )}
+              <div className="flex items-center gap-1 shrink-0">
+                <div className="relative" ref={calendarOpenIndex === i ? calendarRef : undefined}>
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setCalendarOpenIndex(calendarOpenIndex === i ? null : i);
@@ -166,6 +163,16 @@ const EventList = ({ results }: EventListProps) => {
                 </a>
               </div>
             </div>
+
+            {/* Short description preview */}
+            {!isOpen && item.description && (
+              <p
+                className="text-xs text-muted-foreground leading-relaxed truncate pl-6 -mt-2 mb-2 cursor-pointer"
+                onClick={() => setExpandedIndex(i)}
+              >
+                {item.description}
+              </p>
+            )}
 
             {isOpen && (
               <div className="pl-7 pr-2 pb-5 crossfade-enter">
