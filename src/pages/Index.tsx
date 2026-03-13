@@ -254,16 +254,43 @@ const Index = () => {
             onAfterTimeChange={handleAfterTimeChange}
             mode={activeFolder.dateFilterMode} />
           
-            {isLoading ?
-          <div className="flex flex-col items-center justify-center py-20 gap-3 crossfade-enter">
+            {/* Loading indicator */}
+            {isLoading && sourcesLoaded < sourcesTotal && (
+              <div className="flex items-center gap-3 py-4 crossfade-enter">
+                <Loader2 size={14} className="text-primary animate-spin shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-muted-foreground text-xs font-heading">
+                      Scanning sources…
+                    </p>
+                    <p className="text-muted-foreground text-xs font-heading tabular-nums">
+                      {sourcesLoaded}/{sourcesTotal}
+                    </p>
+                  </div>
+                  <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${(sourcesLoaded / sourcesTotal) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Initial full-screen loader when no results yet */}
+            {isLoading && sourcesLoaded === 0 && results.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 crossfade-enter">
                 <Loader2 size={22} className="text-primary animate-spin" />
                 <p className="text-muted-foreground text-sm">
                   Scanning sources…
                 </p>
-              </div> :
+              </div>
+            )}
 
-          <EventList results={filteredResults} />
-          }
+            {/* Results */}
+            {(results.length > 0 || !isLoading) && (
+              <EventList results={filteredResults} />
+            )}
           </> :
         !isLoadingFolders ?
         <div className="text-center py-16 sm:py-20">
