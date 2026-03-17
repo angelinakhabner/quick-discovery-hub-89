@@ -101,7 +101,7 @@ const EventList = ({ results }: EventListProps) => {
                 {item.time}
               </span>
 
-              <span className="text-muted-foreground font-heading text-sm whitespace-nowrap hidden sm:inline">
+              <span className="text-muted-foreground font-heading text-xs sm:text-sm whitespace-nowrap truncate max-w-[80px] sm:max-w-none">
                 {item.venue}
               </span>
 
