@@ -58,6 +58,179 @@ function buildDateDescription(filter: string): string {
   return `today, ${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
 }
 
+function getWarsawDateOnly(): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Warsaw',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+
+  const year = Number(parts.find(p => p.type === 'year')?.value || '1970');
+  const month = Number(parts.find(p => p.type === 'month')?.value || '01');
+  const day = Number(parts.find(p => p.type === 'day')?.value || '01');
+
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
+function toIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function getDateRangeForFilter(filter: string): { start: string; end: string } {
+  const today = getWarsawDateOnly();
+
+  if (filter === 'today') {
+    const day = toIsoDate(today);
+    return { start: day, end: day };
+  }
+
+  if (filter === 'tomorrow') {
+    const day = toIsoDate(addDays(today, 1));
+    return { start: day, end: day };
+  }
+
+  if (filter === 'next3days') {
+    return { start: toIsoDate(today), end: toIsoDate(addDays(today, 2)) };
+  }
+
+  if (filter === 'thisweek') {
+    const dayOfWeek = today.getUTCDay();
+    const endOfWeek = addDays(today, 7 - dayOfWeek);
+    return { start: toIsoDate(today), end: toIsoDate(endOfWeek) };
+  }
+
+  if (filter === 'nextweek') {
+    const dayOfWeek = today.getUTCDay();
+    const startNextWeek = addDays(today, 8 - dayOfWeek);
+    const endNextWeek = addDays(startNextWeek, 6);
+    return { start: toIsoDate(startNextWeek), end: toIsoDate(endNextWeek) };
+  }
+
+  if (filter === 'thismonth') {
+    const endOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0));
+    return { start: toIsoDate(today), end: toIsoDate(endOfMonth) };
+  }
+
+  if (filter === 'nextmonth') {
+    const startNextMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 1));
+    const endNextMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 2, 0));
+    return { start: toIsoDate(startNextMonth), end: toIsoDate(endNextMonth) };
+  }
+
+  const day = toIsoDate(today);
+  return { start: day, end: day };
+}
+
+function decodeHtml(text: string): string {
+  return text
+    .replace(/&#038;|&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+}
+
+function getAttr(tag: string, attrName: string): string {
+  const regex = new RegExp(`${attrName}="([^"]*)"`);
+  const match = tag.match(regex);
+  return match?.[1] || '';
+}
+
+function formatPolishDateFromIso(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.toLocaleDateString('pl-PL', {
+    timeZone: 'Europe/Warsaw',
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+function isKinotekaSource(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname === 'kinoteka.pl' || hostname.endsWith('.kinoteka.pl');
+  } catch {
+    return false;
+  }
+}
+
+function parseKinotekaEventsFromHtml(
+  html: string,
+  sourceName: string,
+  filter: string,
+  afterTime?: string
+): ScrapedEvent[] {
+  const { start, end } = getDateRangeForFilter(filter);
+  const anchors = html.match(/<a\b[^>]*>/g) || [];
+  const seen = new Set<string>();
+  const events: ScrapedEvent[] = [];
+
+  for (const tag of anchors) {
+    if (!tag.includes('data-title="') || !tag.includes('data-day="') || !tag.includes('data-hour="')) {
+      continue;
+    }
+
+    const title = decodeHtml(getAttr(tag, 'data-title'));
+    const day = getAttr(tag, 'data-day');
+    const time = getAttr(tag, 'data-hour');
+
+    if (!title || !day || !time) continue;
+    if (day < start || day > end) continue;
+    if (afterTime && time < afterTime) continue;
+
+    const sourceUrl = decodeHtml(getAttr(tag, 'data-reserve-link') || getAttr(tag, 'href'));
+    const description = decodeHtml(getAttr(tag, 'data-description'));
+
+    const dedupeKey = `${title}|${day}|${time}|${sourceUrl}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    events.push({
+      title,
+      time,
+      venue: sourceName,
+      date: formatPolishDateFromIso(day),
+      description: description || undefined,
+      sourceUrl: sourceUrl || undefined,
+    });
+  }
+
+  events.sort((a, b) => a.time.localeCompare(b.time));
+  return events;
+}
+
+async function scrapeKinotekaDirect(
+  formattedUrl: string,
+  sourceName: string,
+  filter: string,
+  afterTime?: string
+): Promise<ScrapedEvent[]> {
+  const response = await fetch(formattedUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; event-scraper/1.0)',
+      'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
+    },
+  });
+
+  if (!response.ok) {
+    console.error(`Kinoteka fetch failed: ${response.status}`);
+    return [];
+  }
+
+  const html = await response.text();
+  return parseKinotekaEventsFromHtml(html, sourceName, filter, afterTime);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
