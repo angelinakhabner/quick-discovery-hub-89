@@ -87,9 +87,14 @@ const EventList = ({ results }: EventListProps) => {
                 className={`text-muted-foreground group-hover:text-foreground transition-all shrink-0 ${isOpen ? "rotate-180" : ""}`}
               />
 
-              <span className="text-foreground font-heading font-medium text-sm min-w-0 flex-1 truncate">
-                {item.title}
-              </span>
+              <div className="min-w-0 flex-1">
+                <span className="text-foreground font-heading font-medium text-sm block truncate">
+                  {item.title}
+                </span>
+                <span className="text-muted-foreground font-heading text-xs block truncate sm:hidden">
+                  {item.venue}
+                </span>
+              </div>
 
               {item.genre && (
                 <span className="text-xs font-heading text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap hidden md:inline font-medium">
@@ -101,7 +106,7 @@ const EventList = ({ results }: EventListProps) => {
                 {item.time}
               </span>
 
-              <span className="text-muted-foreground font-heading text-xs sm:text-sm whitespace-nowrap truncate max-w-[80px] sm:max-w-none">
+              <span className="text-muted-foreground font-heading text-sm whitespace-nowrap hidden sm:inline">
                 {item.venue}
               </span>
 
