@@ -164,6 +164,21 @@ function isKinotekaSource(url: string): boolean {
   }
 }
 
+function buildFilmPageMap(html: string): Map<string, string> {
+  const map = new Map<string, string>();
+  // Match thumbnail links like <a ... href="https://kinoteka.pl/film/slug/" aria-label="Title" ...>
+  const linkRegex = /<a\b[^>]*href="(https?:\/\/kinoteka\.pl\/film\/[^"]+)"[^>]*aria-label="([^"]*)"[^>]*>/g;
+  let m: RegExpExecArray | null;
+  while ((m = linkRegex.exec(html)) !== null) {
+    const url = m[1].replace(/\?.*$/, ''); // strip query params
+    const label = decodeHtml(m[2]);
+    if (label && !map.has(label)) {
+      map.set(label, url);
+    }
+  }
+  return map;
+}
+
 function parseKinotekaEventsFromHtml(
   html: string,
   sourceName: string,
@@ -171,6 +186,7 @@ function parseKinotekaEventsFromHtml(
   afterTime?: string
 ): ScrapedEvent[] {
   const { start, end } = getDateRangeForFilter(filter);
+  const filmPages = buildFilmPageMap(html);
   const anchors = html.match(/<a\b[^>]*>/g) || [];
   const seen = new Set<string>();
   const events: ScrapedEvent[] = [];
@@ -188,10 +204,12 @@ function parseKinotekaEventsFromHtml(
     if (day < start || day > end) continue;
     if (afterTime && time < afterTime) continue;
 
-    const sourceUrl = decodeHtml(getAttr(tag, 'data-reserve-link') || getAttr(tag, 'href'));
+    // Prefer film detail page URL over reservation link
+    const filmPageUrl = filmPages.get(title);
+    const sourceUrl = filmPageUrl || decodeHtml(getAttr(tag, 'data-reserve-link') || getAttr(tag, 'href'));
     const description = decodeHtml(getAttr(tag, 'data-description'));
 
-    const dedupeKey = `${title}|${day}|${time}|${sourceUrl}`;
+    const dedupeKey = `${title}|${day}|${time}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
 
