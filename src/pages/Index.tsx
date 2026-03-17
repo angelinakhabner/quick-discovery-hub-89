@@ -35,7 +35,15 @@ const Index = () => {
   const activeFolder = folders.find((f) => f.id === activeFolderId);
   const editingFolder = folders.find((f) => f.id === editingFolderId) || null;
 
-  const filteredResults = results;
+  // Auto-filter past events for "today" filter
+  const filteredResults = useMemo(() => {
+    const isTodayFilter = activeFilter === 'today';
+    if (!isTodayFilter || afterTime) return results; // if manual afterTime is set, backend already filtered
+
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    return results.filter(r => r.time >= currentTime || r.time === '—');
+  }, [results, activeFilter, afterTime]);
 
   const fetchResults = useCallback(async (folder: Folder, filter: TimeFilter, venueCategory: string | null, timeAfter: string) => {
     let sourcesToScrape = folder.sources;
