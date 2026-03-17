@@ -270,28 +270,43 @@ Deno.serve(async (req) => {
     }
 
     const cacheKey = promptHint || '';
+    const useCache = !isKinotekaSource(formattedUrl);
 
-    // Check cache first
-    const { data: cached } = await supabase
-      .from('scrape_cache')
-      .select('events')
-      .eq('source_url', formattedUrl)
-      .eq('filter', filter)
-      .eq('prompt_hint', cacheKey)
-      .gt('expires_at', new Date().toISOString())
-      .order('cached_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Check cache first (except sources with highly dynamic schedules like Kinoteka)
+    if (useCache) {
+      const { data: cached } = await supabase
+        .from('scrape_cache')
+        .select('events')
+        .eq('source_url', formattedUrl)
+        .eq('filter', filter)
+        .eq('prompt_hint', cacheKey)
+        .gt('expires_at', new Date().toISOString())
+        .order('cached_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (cached) {
-      console.log(`Cache hit for ${source.name}`);
-      let events = cached.events as ScrapedEvent[];
-      // Apply afterTime filter on cached results
-      if (afterTime) {
-        events = events.filter(e => e.time >= afterTime);
+      if (cached) {
+        console.log(`Cache hit for ${source.name}`);
+        let events = cached.events as ScrapedEvent[];
+        // Apply afterTime filter on cached results
+        if (afterTime) {
+          events = events.filter(e => e.time >= afterTime);
+        }
+        return new Response(
+          JSON.stringify({ success: true, data: events, cached: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
+    }
+
+    // Deterministic parser for Kinoteka to avoid AI-inferred screening times
+    if (isKinotekaSource(formattedUrl)) {
+      console.log(`Scraping Kinoteka directly: ${formattedUrl}`);
+      const events = await scrapeKinotekaDirect(formattedUrl, source.name, filter, afterTime);
+      console.log(`Found ${events.length} events from ${source.name} (direct parser)`);
+
       return new Response(
-        JSON.stringify({ success: true, data: events, cached: true }),
+        JSON.stringify({ success: true, data: events }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
