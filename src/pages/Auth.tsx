@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
@@ -45,10 +45,10 @@ const Auth = () => {
     setLoading(false);
   };
 
-  useState(() => {
+  useEffect(() => {
     const remembered = localStorage.getItem("whatson_remember");
     if (remembered) { setEmail(remembered); setRememberMe(true); }
-  });
+  }, []);
 
   const inputClass = "w-full px-4 py-3 text-sm bg-card text-foreground rounded-xl border border-border font-heading placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40";
 
