@@ -344,12 +344,6 @@ const Index = () => {
 
       }
 
-      {/* Dedication */}
-      <footer className="max-w-2xl pb-10 pt-4 mx-[10px] my-0 px-[19px] text-sm font-extralight font-mono text-center text-muted-foreground">
-        <p className="text-center text-xs text-muted-foreground/50 italic font-display">
-          to my girlfriend saying "moze pojdziemy do kina/teatra/ na koncert" at 17:53 on random tuesday
-        </p>
-      </footer>
     </div>);
 
 };
