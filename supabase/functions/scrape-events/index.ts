@@ -104,6 +104,53 @@ function getAttr(tag: string, attrName: string): string {
   return tag.match(regex)?.[1] || '';
 }
 
+// --- Description enrichment from detail pages ---
+
+function isSpecificDetailPage(url: string): boolean {
+  try {
+    const { pathname } = new URL(url);
+    return pathname.length > 1 && !pathname.match(/^\/(repertuar|program|schedule|index)\/?$/i);
+  } catch {
+    return false;
+  }
+}
+
+async function fetchDescriptionFromPage(url: string): Promise<string | undefined> {
+  try {
+    const html = await fetchHtml(url);
+    if (!html) return undefined;
+    const match =
+      html.match(/<meta\s+name=["']description["']\s+content=["']([^"']{20,})["']/i) ||
+      html.match(/<meta\s+content=["']([^"']{20,})["']\s+name=["']description["']/i) ||
+      html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']{20,})["']/i) ||
+      html.match(/<meta\s+content=["']([^"']{20,})["']\s+property=["']og:description["']/i);
+    return match ? decodeHtml(match[1]).trim() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function enrichWithDescriptions(events: ScrapedEvent[]): Promise<ScrapedEvent[]> {
+  const urlsToFetch = new Set<string>();
+  for (const e of events) {
+    if (!e.description && e.sourceUrl && isSpecificDetailPage(e.sourceUrl)) {
+      urlsToFetch.add(e.sourceUrl);
+    }
+  }
+  if (urlsToFetch.size === 0) return events;
+
+  const descMap = new Map<string, string | undefined>();
+  await Promise.all([...urlsToFetch].map(async url => {
+    descMap.set(url, await fetchDescriptionFromPage(url));
+  }));
+
+  return events.map(e =>
+    !e.description && e.sourceUrl && descMap.has(e.sourceUrl)
+      ? { ...e, description: descMap.get(e.sourceUrl) }
+      : e
+  );
+}
+
 // --- Source detection ---
 
 function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'generic' {
@@ -180,7 +227,6 @@ function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: st
   const events: ScrapedEvent[] = [];
   const seen = new Set<string>();
 
-  // Find all day headers with positions: <span class="cell-date-header__day-num">17</span>...<span class="cell-date-header__day-month">marca</span>
   const dayHeaderRegex = /cell-date-header__day-num">(\d+)<\/span>.*?cell-date-header__day-month">(\w+)<\/span>/gs;
   const dayHeaders: { pos: number; isoDate: string }[] = [];
   let dh;
@@ -200,8 +246,6 @@ function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: st
     const nextPos = i + 1 < dayHeaders.length ? dayHeaders[i + 1].pos : html.length;
     const section = html.slice(pos, nextPos);
 
-    // Find each event block: movie-calendar-info__date + movie-calendar-info__title + film link
-    // Each event is in a <div class="movie-calendar-info"> block
     const blockRegex = /movie-calendar-info__date">(\d{2}:\d{2})<\/span>\s*<h5 class="movie-calendar-info__title">([^<]+)<\/h5>/g;
     let em;
     while ((em = blockRegex.exec(section)) !== null) {
@@ -213,7 +257,6 @@ function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: st
       if (seen.has(dedupeKey)) continue;
       seen.add(dedupeKey);
 
-      // Find film URL in the expand section after this match (within ~1500 chars)
       const afterBlock = section.slice(em.index, em.index + 1500);
       const filmUrlMatch = afterBlock.match(/href="(https:\/\/kinomuranow\.pl\/film\/[^"]+)"/);
       const sourceUrl = filmUrlMatch ? filmUrlMatch[1] : 'https://kinomuranow.pl/repertuar';
@@ -240,9 +283,7 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
   const currentYear = warsawDate.getUTCFullYear();
   const events: ScrapedEvent[] = [];
 
-  // Split by day headers: <h3>17 Marca - Wtorek</h3>
   const parts = html.split(/<h3>(\d+)\s+(\w+)\s*-\s*\w+<\/h3>/i);
-  // parts: [before, day1, month1, content1, day2, month2, content2, ...]
 
   for (let i = 1; i + 2 < parts.length; i += 3) {
     const dayNum = Number(parts[i]);
@@ -255,7 +296,6 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
     const isoDate = `${currentYear}-${String(monthNum + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     if (isoDate < start || isoDate > end) continue;
 
-    // Events: <span class="hour"><a href="URL">HH:MM - Title</a></span>
     const eventRegex = /<span class="hour"><a href="([^"]+)">(\d{2}:\d{2})\s*-\s*([^<]+)<\/a><\/span>/g;
     let em;
     while ((em = eventRegex.exec(content)) !== null) {
@@ -266,7 +306,6 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
 
       const sourceUrl = rawUrl.startsWith('http') ? rawUrl : `https://www.iluzjon.fn.org.pl${rawUrl}`;
 
-      // Extract description from nearby info-add divs
       const afterEvent = content.slice(em.index, em.index + 2000);
       let description = '';
       const infoMatch = afterEvent.match(/alt="Informacje dodatkowe">\s*([^<]+)/);
@@ -365,8 +404,9 @@ Deno.serve(async (req) => {
     // Deterministic parsers bypass cache entirely for freshest data
     if (sourceType !== 'generic') {
       const events = await scrapeDirect(formattedUrl, source.name, sourceType, filter, afterTime);
+      const enriched = await enrichWithDescriptions(events);
       return new Response(
-        JSON.stringify({ success: true, data: events }),
+        JSON.stringify({ success: true, data: enriched }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -422,7 +462,7 @@ Deno.serve(async (req) => {
                     time: { type: 'string', description: 'Start time in HH:MM format' },
                     date: { type: 'string', description: 'Date in format like "10 marca" (Polish locale)' },
                     link: { type: 'string', description: 'The absolute URL to this specific event/film/show detail page (not the main listing page). Must start with http:// or https://.' },
-                    description: { type: 'string', description: 'The actual plot synopsis or content description of the film/show/event — NOT the title or a label like "opis filmu". Write 1-3 sentences summarizing what the event is about, in Polish if the source is in Polish.' },
+                    description: { type: 'string', description: 'The actual plot synopsis or content description of the event extracted directly from the page — NOT the title or a generic label. 2-3 sentences. Language rule: Polish for Polish-language sites, English for all other languages.' },
                     director: { type: 'string' },
                     cast: { type: 'string' },
                     duration: { type: 'string', description: 'Duration like "120 min"' },
@@ -443,7 +483,8 @@ CRITICAL RULES:
 4. If a single show has MULTIPLE screening times (e.g. 14:30, 17:30, 20:30), create a SEPARATE entry for EACH time.
 5. If no events match the date range, return an empty events array — do NOT make up events.
 6. For each event extract the direct URL link to the specific event detail page (not the listing page).
-7. Leave fields empty ("") rather than inventing data you don't see on the page.`,
+7. For each event extract the description/synopsis directly from the page. Polish sites → write in Polish, all other sites → write in English. Do NOT invent content.
+8. Leave fields empty ("") rather than inventing data you don't see on the page.`,
         },
         onlyMainContent: true,
         waitFor: 2000,
