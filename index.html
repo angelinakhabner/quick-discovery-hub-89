@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <head>
+    <script>
+      (function() {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    ...
     <meta charset="UTF-8" />
     <meta name="description" content="Personal quick check-up tool — your curated sources, filtered by time.">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
