@@ -23,8 +23,6 @@ interface ScrapedEvent {
   sourceUrl?: string;
 }
 
-// --- Date utilities ---
-
 const POLISH_MONTHS: Record<string, number> = {
   'stycznia': 0, 'lutego': 1, 'marca': 2, 'kwietnia': 3,
   'maja': 4, 'czerwca': 5, 'lipca': 6, 'sierpnia': 7,
@@ -104,8 +102,6 @@ function getAttr(tag: string, attrName: string): string {
   return tag.match(regex)?.[1] || '';
 }
 
-// --- Description enrichment from detail pages ---
-
 function isSpecificDetailPage(url: string): boolean {
   try {
     const { pathname } = new URL(url);
@@ -151,8 +147,6 @@ async function enrichWithDescriptions(events: ScrapedEvent[]): Promise<ScrapedEv
   );
 }
 
-// --- Source detection ---
-
 function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'generic' {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
@@ -186,8 +180,6 @@ async function fetchHtml(url: string): Promise<string | null> {
     return null;
   }
 }
-
-// --- Kinoteka parser ---
 
 function buildFilmPageMap(html: string): Map<string, string> {
   const map = new Map<string, string>();
@@ -227,8 +219,6 @@ function parseKinotekaEventsFromHtml(html: string, sourceName: string, filter: s
   events.sort((a, b) => a.time.localeCompare(b.time));
   return events;
 }
-
-// --- Kino Muranów parser ---
 
 function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: string, afterTime?: string): ScrapedEvent[] {
   const { start, end } = getDateRangeForFilter(filter);
@@ -285,8 +275,6 @@ function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: st
   return events;
 }
 
-// --- Kino Iluzjon parser ---
-
 function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: string, afterTime?: string): ScrapedEvent[] {
   const { start, end } = getDateRangeForFilter(filter);
   const warsawDate = getWarsawDateOnly();
@@ -340,8 +328,6 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
   return events;
 }
 
-// --- Direct scrape handler for deterministic sources ---
-
 async function scrapeDirect(
   formattedUrl: string,
   sourceName: string,
@@ -369,8 +355,6 @@ async function scrapeDirect(
   console.log(`Found ${events.length} events from ${sourceName} (${sourceType} parser)`);
   return events;
 }
-
-// --- Main handler ---
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -403,7 +387,6 @@ Deno.serve(async (req) => {
 
     const sourceType = getSourceType(formattedUrl);
 
-    // Deterministic parsers bypass cache entirely for freshest data
     if (sourceType !== 'generic') {
       const events = await scrapeDirect(formattedUrl, source.name, sourceType, filter, afterTime);
       const enriched = await enrichWithDescriptions(events);
@@ -413,28 +396,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    // --- Generic AI extraction (theaters, clubs, etc.) ---
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
     if (!anthropicKey) {
       return new Response(
-        JSON.stringify({ success: false, error: 'AI extraction not configured — ANTHROPIC_API_KEY missing' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: true, data: [], error: 'ANTHROPIC_API_KEY missing' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const cacheKey = promptHint || '';
 
-    // Check cache
-    const { data: cached } = await supabase
-      .from('scrape_cache')
-      .select('events')
-      .eq('source_url', formattedUrl)
-      .eq('filter', filter)
-      .eq('prompt_hint', cacheKey)
-      .gt('expires_at', new Date().toISOString())
-      .order('cached_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    let cached: { events: ScrapedEvent[] } | null = null;
+    try {
+      const { data } = await supabase
+        .from('scrape_cache')
+        .select('events')
+        .eq('source_url', formattedUrl)
+        .eq('filter', filter)
+        .eq('prompt_hint', cacheKey)
+        .gt('expires_at', new Date().toISOString())
+        .order('cached_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      cached = data as any;
+    } catch (err) {
+      console.error('Cache lookup threw:', err instanceof Error ? err.message : err);
+    }
 
     if (cached) {
       console.log(`Cache hit for ${source.name}`);
@@ -446,7 +433,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch the page HTML directly (fast, no third-party dependency)
     console.log(`Scraping (AI): ${formattedUrl}`);
     const html = await fetchHtml(formattedUrl);
     if (!html) {
@@ -456,7 +442,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Strip HTML to readable text
     const pageText = html
       .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -469,9 +454,10 @@ Deno.serve(async (req) => {
     const { start, end } = getDateRangeForFilter(filter);
     const dateDescription = buildDateDescription(filter);
 
-    // Extract events using Claude Haiku (fast: ~3-5s total)
     let claudeRes: Response;
     try {
+      const claudeController = new AbortController();
+      const claudeTimeout = setTimeout(() => claudeController.abort(), 25000);
       claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -479,6 +465,7 @@ Deno.serve(async (req) => {
           'anthropic-version': '2023-06-01',
           'content-type': 'application/json',
         },
+        signal: claudeController.signal,
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 2000,
@@ -488,6 +475,7 @@ Deno.serve(async (req) => {
           }],
         }),
       });
+      clearTimeout(claudeTimeout);
     } catch (err) {
       console.error(`Claude fetch threw for ${formattedUrl}:`, err instanceof Error ? err.message : err);
       return new Response(
@@ -530,20 +518,16 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${events.length} events from ${source.name} (Claude extraction)`);
 
-    // Store in cache
-    await supabase.from('scrape_cache').insert({
-      source_url: formattedUrl,
-      filter,
-      prompt_hint: cacheKey,
-      events,
-      expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-    }).then(({ error }) => {
-      if (error) console.error('Cache write error:', error);
-    });
-
-    // Clean expired cache occasionally
-    if (Math.random() < 0.1) {
-      supabase.from('scrape_cache').delete().lt('expires_at', new Date().toISOString()).then(() => {});
+    try {
+      await supabase.from('scrape_cache').insert({
+        source_url: formattedUrl,
+        filter,
+        prompt_hint: cacheKey,
+        events,
+        expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      });
+    } catch (err) {
+      console.error('Cache write threw:', err instanceof Error ? err.message : err);
     }
 
     return new Response(
@@ -551,11 +535,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in scrape-events:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to scrape events';
+    console.error('Unexpected error in scrape-events:', error instanceof Error ? error.stack || error.message : error);
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: true, data: [], error: error instanceof Error ? error.message : 'unknown error' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
