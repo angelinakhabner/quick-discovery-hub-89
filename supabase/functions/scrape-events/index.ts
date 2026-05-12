@@ -104,6 +104,53 @@ function getAttr(tag: string, attrName: string): string {
   return tag.match(regex)?.[1] || '';
 }
 
+// --- Description enrichment from detail pages ---
+
+function isSpecificDetailPage(url: string): boolean {
+  try {
+    const { pathname } = new URL(url);
+    return pathname.length > 1 && !pathname.match(/^\/(repertuar|program|schedule|index)\/?$/i);
+  } catch {
+    return false;
+  }
+}
+
+async function fetchDescriptionFromPage(url: string): Promise<string | undefined> {
+  try {
+    const html = await fetchHtml(url);
+    if (!html) return undefined;
+    const match =
+      html.match(/<meta\s+name=["']description["']\s+content=["']([^"']{20,})["']/i) ||
+      html.match(/<meta\s+content=["']([^"']{20,})["']\s+name=["']description["']/i) ||
+      html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']{20,})["']/i) ||
+      html.match(/<meta\s+content=["']([^"']{20,})["']\s+property=["']og:description["']/i);
+    return match ? decodeHtml(match[1]).trim() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function enrichWithDescriptions(events: ScrapedEvent[]): Promise<ScrapedEvent[]> {
+  const urlsToFetch = new Set<string>();
+  for (const e of events) {
+    if (!e.description && e.sourceUrl && isSpecificDetailPage(e.sourceUrl)) {
+      urlsToFetch.add(e.sourceUrl);
+    }
+  }
+  if (urlsToFetch.size === 0) return events;
+
+  const descMap = new Map<string, string | undefined>();
+  await Promise.all([...urlsToFetch].map(async url => {
+    descMap.set(url, await fetchDescriptionFromPage(url));
+  }));
+
+  return events.map(e =>
+    !e.description && e.sourceUrl && descMap.has(e.sourceUrl)
+      ? { ...e, description: descMap.get(e.sourceUrl) }
+      : e
+  );
+}
+
 // --- Source detection ---
 
 function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'generic' {
@@ -117,17 +164,27 @@ function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'gener
 }
 
 async function fetchHtml(url: string): Promise<string | null> {
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; event-scraper/1.0)',
-      'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
-    },
-  });
-  if (!response.ok) {
-    console.error(`Fetch failed for ${url}: ${response.status}`);
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!response.ok) {
+      console.error(`Fetch failed for ${url}: ${response.status}`);
+      return null;
+    }
+    return await response.text();
+  } catch (err) {
+    console.error(`Fetch threw for ${url}:`, err instanceof Error ? err.message : err);
     return null;
   }
-  return response.text();
 }
 
 // --- Kinoteka parser ---
@@ -180,7 +237,6 @@ function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: st
   const events: ScrapedEvent[] = [];
   const seen = new Set<string>();
 
-  // Find all day headers with positions: <span class="cell-date-header__day-num">17</span>...<span class="cell-date-header__day-month">marca</span>
   const dayHeaderRegex = /cell-date-header__day-num">(\d+)<\/span>.*?cell-date-header__day-month">(\w+)<\/span>/gs;
   const dayHeaders: { pos: number; isoDate: string }[] = [];
   let dh;
@@ -200,8 +256,6 @@ function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: st
     const nextPos = i + 1 < dayHeaders.length ? dayHeaders[i + 1].pos : html.length;
     const section = html.slice(pos, nextPos);
 
-    // Find each event block: movie-calendar-info__date + movie-calendar-info__title + film link
-    // Each event is in a <div class="movie-calendar-info"> block
     const blockRegex = /movie-calendar-info__date">(\d{2}:\d{2})<\/span>\s*<h5 class="movie-calendar-info__title">([^<]+)<\/h5>/g;
     let em;
     while ((em = blockRegex.exec(section)) !== null) {
@@ -213,7 +267,6 @@ function parseMuranowEventsFromHtml(html: string, sourceName: string, filter: st
       if (seen.has(dedupeKey)) continue;
       seen.add(dedupeKey);
 
-      // Find film URL in the expand section after this match (within ~1500 chars)
       const afterBlock = section.slice(em.index, em.index + 1500);
       const filmUrlMatch = afterBlock.match(/href="(https:\/\/kinomuranow\.pl\/film\/[^"]+)"/);
       const sourceUrl = filmUrlMatch ? filmUrlMatch[1] : 'https://kinomuranow.pl/repertuar';
@@ -240,9 +293,7 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
   const currentYear = warsawDate.getUTCFullYear();
   const events: ScrapedEvent[] = [];
 
-  // Split by day headers: <h3>17 Marca - Wtorek</h3>
   const parts = html.split(/<h3>(\d+)\s+(\w+)\s*-\s*\w+<\/h3>/i);
-  // parts: [before, day1, month1, content1, day2, month2, content2, ...]
 
   for (let i = 1; i + 2 < parts.length; i += 3) {
     const dayNum = Number(parts[i]);
@@ -255,7 +306,6 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
     const isoDate = `${currentYear}-${String(monthNum + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     if (isoDate < start || isoDate > end) continue;
 
-    // Events: <span class="hour"><a href="URL">HH:MM - Title</a></span>
     const eventRegex = /<span class="hour"><a href="([^"]+)">(\d{2}:\d{2})\s*-\s*([^<]+)<\/a><\/span>/g;
     let em;
     while ((em = eventRegex.exec(content)) !== null) {
@@ -266,7 +316,6 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
 
       const sourceUrl = rawUrl.startsWith('http') ? rawUrl : `https://www.iluzjon.fn.org.pl${rawUrl}`;
 
-      // Extract description from nearby info-add divs
       const afterEvent = content.slice(em.index, em.index + 2000);
       let description = '';
       const infoMatch = afterEvent.match(/alt="Informacje dodatkowe">\s*([^<]+)/);
@@ -343,14 +392,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -365,13 +406,22 @@ Deno.serve(async (req) => {
     // Deterministic parsers bypass cache entirely for freshest data
     if (sourceType !== 'generic') {
       const events = await scrapeDirect(formattedUrl, source.name, sourceType, filter, afterTime);
+      const enriched = await enrichWithDescriptions(events);
       return new Response(
-        JSON.stringify({ success: true, data: events }),
+        JSON.stringify({ success: true, data: enriched }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // --- Generic AI extraction (theaters, clubs, etc.) ---
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicKey) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'AI extraction not configured — ANTHROPIC_API_KEY missing' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const cacheKey = promptHint || '';
 
     // Check cache
@@ -396,85 +446,93 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch the page HTML directly (fast, no third-party dependency)
     console.log(`Scraping (AI): ${formattedUrl}`);
-    const dateDescription = buildDateDescription(filter);
-    const { start, end } = getDateRangeForFilter(filter);
-
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ['extract'],
-        extract: {
-          schema: {
-            type: 'object',
-            properties: {
-              events: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    title: { type: 'string' },
-                    time: { type: 'string', description: 'Start time in HH:MM format' },
-                    date: { type: 'string', description: 'Date in format like "10 marca" (Polish locale)' },
-                    link: { type: 'string', description: 'The absolute URL to this specific event/film/show detail page (not the main listing page). Must start with http:// or https://.' },
-                    description: { type: 'string', description: 'The actual plot synopsis or content description of the film/show/event — NOT the title or a label like "opis filmu". Write 1-3 sentences summarizing what the event is about, in Polish if the source is in Polish.' },
-                    director: { type: 'string' },
-                    cast: { type: 'string' },
-                    duration: { type: 'string', description: 'Duration like "120 min"' },
-                    genre: { type: 'string', description: 'Genre or category' },
-                  },
-                  required: ['title', 'time', 'date'],
-                },
-              },
-            },
-            required: ['events'],
-          },
-          prompt: `Extract ONLY events/shows/performances happening ${dateDescription} (ISO date range: ${start} to ${end}).${afterTime ? ` Only include events starting at or after ${afterTime}.` : ''}${promptHint ? ` IMPORTANT: ${promptHint}.` : ''}
-
-CRITICAL RULES:
-1. ONLY include events whose date on the page falls within the range ${start} to ${end}. Do NOT include events on other dates.
-2. Read times EXACTLY as they appear on the page. NEVER guess or invent times.
-3. Read dates EXACTLY as shown. If a show is listed for "19 marca" and the requested date is "17 marca", do NOT include it.
-4. If a single show has MULTIPLE screening times (e.g. 14:30, 17:30, 20:30), create a SEPARATE entry for EACH time.
-5. If no events match the date range, return an empty events array — do NOT make up events.
-6. For each event extract the direct URL link to the specific event detail page (not the listing page).
-7. Leave fields empty ("") rather than inventing data you don't see on the page.`,
-        },
-        onlyMainContent: true,
-        waitFor: 2000,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error(`Firecrawl error for ${formattedUrl}:`, data);
+    const html = await fetchHtml(formattedUrl);
+    if (!html) {
       return new Response(
         JSON.stringify({ success: true, data: [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const jsonData = data?.data?.extract || data?.extract || data?.data?.json || data?.json;
-    const events: ScrapedEvent[] = (jsonData?.events || []).map((evt: any) => ({
+    // Strip HTML to readable text
+    const pageText = html
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 12000);
+
+    const { start, end } = getDateRangeForFilter(filter);
+    const dateDescription = buildDateDescription(filter);
+
+    // Extract events using Claude Haiku (fast: ~3-5s total)
+    let claudeRes: Response;
+    try {
+      const claudeController = new AbortController();
+      const claudeTimeout = setTimeout(() => claudeController.abort(), 25000);
+      claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        signal: claudeController.signal,
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: `Extract events from this webpage. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\nWebpage text:\n${pageText}`,
+          }],
+        }),
+      });
+      clearTimeout(claudeTimeout);
+    } catch (err) {
+      console.error(`Claude fetch threw for ${formattedUrl}:`, err instanceof Error ? err.message : err);
+      return new Response(
+        JSON.stringify({ success: true, data: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!claudeRes.ok) {
+      console.error(`Claude API error for ${formattedUrl}:`, await claudeRes.text());
+      return new Response(
+        JSON.stringify({ success: true, data: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const claudeData = await claudeRes.json();
+    const rawText: string = claudeData.content?.[0]?.text || '{"events":[]}';
+
+    let parsed: { events: any[] } = { events: [] };
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      const m = rawText.match(/\{[\s\S]*"events"[\s\S]*\}/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch { /* ignore */ } }
+    }
+
+    const events: ScrapedEvent[] = (parsed.events || []).map((evt: any) => ({
       title: evt.title || 'Untitled',
       time: evt.time || '—',
       venue: source.name,
       date: evt.date || '',
-      description: evt.description,
-      director: evt.director,
-      cast: evt.cast,
-      duration: evt.duration,
-      genre: evt.genre,
+      description: evt.description || undefined,
+      director: evt.director || undefined,
+      cast: evt.cast || undefined,
+      duration: evt.duration || undefined,
+      genre: evt.genre || undefined,
       sourceUrl: evt.link || formattedUrl,
     }));
 
-    console.log(`Found ${events.length} events from ${source.name}`);
+    console.log(`Found ${events.length} events from ${source.name} (Claude extraction)`);
 
     // Store in cache
     await supabase.from('scrape_cache').insert({
