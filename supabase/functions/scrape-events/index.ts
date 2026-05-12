@@ -164,17 +164,27 @@ function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'gener
 }
 
 async function fetchHtml(url: string): Promise<string | null> {
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; event-scraper/1.0)',
-      'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
-    },
-  });
-  if (!response.ok) {
-    console.error(`Fetch failed for ${url}: ${response.status}`);
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!response.ok) {
+      console.error(`Fetch failed for ${url}: ${response.status}`);
+      return null;
+    }
+    return await response.text();
+  } catch (err) {
+    console.error(`Fetch threw for ${url}:`, err instanceof Error ? err.message : err);
     return null;
   }
-  return response.text();
 }
 
 // --- Kinoteka parser ---
@@ -460,22 +470,31 @@ Deno.serve(async (req) => {
     const dateDescription = buildDateDescription(filter);
 
     // Extract events using Claude Haiku (fast: ~3-5s total)
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: `Extract events from this webpage. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\nWebpage text:\n${pageText}`,
-        }],
-      }),
-    });
+    let claudeRes: Response;
+    try {
+      claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: `Extract events from this webpage. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\nWebpage text:\n${pageText}`,
+          }],
+        }),
+      });
+    } catch (err) {
+      console.error(`Claude fetch threw for ${formattedUrl}:`, err instanceof Error ? err.message : err);
+      return new Response(
+        JSON.stringify({ success: true, data: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!claudeRes.ok) {
       console.error(`Claude API error for ${formattedUrl}:`, await claudeRes.text());
