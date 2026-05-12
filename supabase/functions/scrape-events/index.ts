@@ -382,14 +382,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -401,7 +393,7 @@ Deno.serve(async (req) => {
 
     const sourceType = getSourceType(formattedUrl);
 
-    // Deterministic parsers bypass cache entirely for freshest data
+    // Deterministic parsers bypass Firecrawl and cache entirely for freshest data
     if (sourceType !== 'generic') {
       const events = await scrapeDirect(formattedUrl, source.name, sourceType, filter, afterTime);
       const enriched = await enrichWithDescriptions(events);
@@ -412,6 +404,14 @@ Deno.serve(async (req) => {
     }
 
     // --- Generic AI extraction (theaters, clubs, etc.) ---
+    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const cacheKey = promptHint || '';
 
     // Check cache
