@@ -393,7 +393,7 @@ Deno.serve(async (req) => {
 
     const sourceType = getSourceType(formattedUrl);
 
-    // Deterministic parsers bypass Firecrawl and cache entirely for freshest data
+    // Deterministic parsers bypass cache entirely for freshest data
     if (sourceType !== 'generic') {
       const events = await scrapeDirect(formattedUrl, source.name, sourceType, filter, afterTime);
       const enriched = await enrichWithDescriptions(events);
@@ -404,10 +404,10 @@ Deno.serve(async (req) => {
     }
 
     // --- Generic AI extraction (theaters, clubs, etc.) ---
-    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!apiKey) {
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicKey) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
+        JSON.stringify({ success: false, error: 'AI extraction not configured — ANTHROPIC_API_KEY missing' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -436,86 +436,80 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch the page HTML directly (fast, no third-party dependency)
     console.log(`Scraping (AI): ${formattedUrl}`);
-    const dateDescription = buildDateDescription(filter);
-    const { start, end } = getDateRangeForFilter(filter);
-
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ['extract'],
-        extract: {
-          schema: {
-            type: 'object',
-            properties: {
-              events: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    title: { type: 'string' },
-                    time: { type: 'string', description: 'Start time in HH:MM format' },
-                    date: { type: 'string', description: 'Date in format like "10 marca" (Polish locale)' },
-                    link: { type: 'string', description: 'The absolute URL to this specific event/film/show detail page (not the main listing page). Must start with http:// or https://.' },
-                    description: { type: 'string', description: 'The actual plot synopsis or content description of the event extracted directly from the page — NOT the title or a generic label. 2-3 sentences. Language rule: Polish for Polish-language sites, English for all other languages.' },
-                    director: { type: 'string' },
-                    cast: { type: 'string' },
-                    duration: { type: 'string', description: 'Duration like "120 min"' },
-                    genre: { type: 'string', description: 'Genre or category' },
-                  },
-                  required: ['title', 'time', 'date'],
-                },
-              },
-            },
-            required: ['events'],
-          },
-          prompt: `Extract ONLY events/shows/performances happening ${dateDescription} (ISO date range: ${start} to ${end}).${afterTime ? ` Only include events starting at or after ${afterTime}.` : ''}${promptHint ? ` IMPORTANT: ${promptHint}.` : ''}
-
-CRITICAL RULES:
-1. ONLY include events whose date on the page falls within the range ${start} to ${end}. Do NOT include events on other dates.
-2. Read times EXACTLY as they appear on the page. NEVER guess or invent times.
-3. Read dates EXACTLY as shown. If a show is listed for "19 marca" and the requested date is "17 marca", do NOT include it.
-4. If a single show has MULTIPLE screening times (e.g. 14:30, 17:30, 20:30), create a SEPARATE entry for EACH time.
-5. If no events match the date range, return an empty events array — do NOT make up events.
-6. For each event extract the direct URL link to the specific event detail page (not the listing page).
-7. For each event extract the description/synopsis directly from the page. Polish sites → write in Polish, all other sites → write in English. Do NOT invent content.
-8. Leave fields empty ("") rather than inventing data you don't see on the page.`,
-        },
-        onlyMainContent: true,
-        waitFor: 2000,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error(`Firecrawl error for ${formattedUrl}:`, data);
+    const html = await fetchHtml(formattedUrl);
+    if (!html) {
       return new Response(
         JSON.stringify({ success: true, data: [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const jsonData = data?.data?.extract || data?.extract || data?.data?.json || data?.json;
-    const events: ScrapedEvent[] = (jsonData?.events || []).map((evt: any) => ({
+    // Strip HTML to readable text
+    const pageText = html
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 12000);
+
+    const { start, end } = getDateRangeForFilter(filter);
+    const dateDescription = buildDateDescription(filter);
+
+    // Extract events using Claude Haiku (fast: ~3-5s total)
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: `Extract events from this webpage. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\nWebpage text:\n${pageText}`,
+        }],
+      }),
+    });
+
+    if (!claudeRes.ok) {
+      console.error(`Claude API error for ${formattedUrl}:`, await claudeRes.text());
+      return new Response(
+        JSON.stringify({ success: true, data: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const claudeData = await claudeRes.json();
+    const rawText: string = claudeData.content?.[0]?.text || '{"events":[]}';
+
+    let parsed: { events: any[] } = { events: [] };
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      const m = rawText.match(/\{[\s\S]*"events"[\s\S]*\}/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch { /* ignore */ } }
+    }
+
+    const events: ScrapedEvent[] = (parsed.events || []).map((evt: any) => ({
       title: evt.title || 'Untitled',
       time: evt.time || '—',
       venue: source.name,
       date: evt.date || '',
-      description: evt.description,
-      director: evt.director,
-      cast: evt.cast,
-      duration: evt.duration,
-      genre: evt.genre,
+      description: evt.description || undefined,
+      director: evt.director || undefined,
+      cast: evt.cast || undefined,
+      duration: evt.duration || undefined,
+      genre: evt.genre || undefined,
       sourceUrl: evt.link || formattedUrl,
     }));
 
-    console.log(`Found ${events.length} events from ${source.name}`);
+    console.log(`Found ${events.length} events from ${source.name} (Claude extraction)`);
 
     // Store in cache
     await supabase.from('scrape_cache').insert({
