@@ -170,11 +170,14 @@ const EventList = ({ results }: EventListProps) => {
             </div>
 
             {/* Short description preview */}
-            {!isOpen && item.description && (
+            {!isOpen && (item.description || item.director) && (
               <p
                 className="text-xs text-muted-foreground leading-relaxed truncate pl-6 -mt-2 mb-2 cursor-pointer"
                 onClick={() => setExpandedIndex(i)}
               >
+                {item.director && (
+                  <span className="font-semibold text-foreground/70">Dir. {item.director}{item.description ? " · " : ""}</span>
+                )}
                 {item.description}
               </p>
             )}
