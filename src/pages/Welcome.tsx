@@ -519,7 +519,11 @@ const Welcome = () => {
     const raw = localStorage.getItem("goin.saved");
     return new Set(raw ? (JSON.parse(raw) as number[]) : []);
   });
-  const [signInOpen, setSignInOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("signin") === "1";
+  });
   const [toast, setToast] = useState("");
 
   const t = T[lang];
