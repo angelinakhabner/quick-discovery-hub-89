@@ -450,6 +450,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log(`HTML_SNIPPET[${source.name}]: ${html.slice(0, 3000)}`);
+
     const pageText = html
       .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
