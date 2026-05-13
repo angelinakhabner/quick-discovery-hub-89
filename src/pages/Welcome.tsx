@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import "@/styles/goin.css";
 
 /* ─────────── I18N ─────────── */
@@ -66,6 +66,10 @@ const T = {
     or: "lub",
     sendMagic: "Wyślij magic link",
     modalFoot: "Kontynuując akceptujesz nasz regulamin. Bez hasła, bez spamu.",
+    magicSent: "Sprawdź skrzynkę — wysłaliśmy link do logowania.",
+    authError: "Coś poszło nie tak. Spróbuj ponownie.",
+    emailRequired: "Podaj adres email.",
+    connecting: "Łączenie…",
     mTabToday: "Dziś",
     mTabExplore: "Odkrywaj",
     mTabSaved: "Zapisane",
@@ -133,6 +137,10 @@ const T = {
     or: "or",
     sendMagic: "Send magic link",
     modalFoot: "By continuing you agree to our terms. No password, no spam.",
+    magicSent: "Check your inbox — we sent you a sign-in link.",
+    authError: "Something went wrong. Please try again.",
+    emailRequired: "Enter your email address.",
+    connecting: "Connecting…",
     mTabToday: "Today",
     mTabExplore: "Explore",
     mTabSaved: "Saved",
@@ -374,15 +382,69 @@ function FeaturedCard({ ev, active, onClick }: { ev: FeaturedItem; active: boole
   );
 }
 
+function GoogleGlyph({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.4-1.6 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1S8.7 6 12 6c1.9 0 3.1.8 3.8 1.5L18.7 5C16.9 3.3 14.6 2.3 12 2.3 6.5 2.3 2.1 6.7 2.1 12.1S6.5 22 12 22c6.9 0 9.5-4.8 9.5-7.3 0-.5 0-.9-.1-1.3H12Z"/>
+      <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.2-2.5c-.9.6-2.1 1-3.5 1-2.7 0-5-1.8-5.8-4.3H3v2.7C4.6 19.7 8 22 12 22Z"/>
+      <path fill="#FBBC05" d="M6.2 13.8c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8V7.5H3C2.3 8.9 2 10.4 2 12s.4 3.1 1 4.5l3.2-2.7Z"/>
+      <path fill="#4285F4" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 3 14.6 2 12 2 8 2 4.6 4.3 3 7.5l3.2 2.7C7 7.7 9.3 5.9 12 5.9Z"/>
+    </svg>
+  );
+}
+
+function AppleGlyph({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M16.4 12.7c0-2.4 2-3.6 2.1-3.6-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.8-1.7 0-3.3 1-4.1 2.5-1.8 3-.5 7.6 1.3 10 .9 1.2 1.9 2.5 3.3 2.4 1.3-.1 1.8-.8 3.4-.8s2 .8 3.3.8c1.4 0 2.3-1.2 3.1-2.4 1-1.4 1.4-2.7 1.4-2.8 0 0-2.7-1-2.7-4.3ZM14 5.6c.7-.8 1.1-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/>
+    </svg>
+  );
+}
+
 function SignInModal({ open, onClose, t }: { open: boolean; onClose: () => void; t: typeof T.PL }) {
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState<null | "google" | "apple" | "magic">(null);
+  const [message, setMessage] = useState<{ kind: "error" | "ok"; text: string } | null>(null);
+
   useEffect(() => {
     if (!open) return;
+    setMessage(null);
+    setBusy(null);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
   if (!open) return null;
+
+  const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL || "/"}`;
+
+  const oauth = async (provider: "google" | "apple") => {
+    setBusy(provider);
+    setMessage(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    });
+    if (error) {
+      setMessage({ kind: "error", text: error.message || t.authError });
+      setBusy(null);
+    }
+  };
+
+  const magic = async () => {
+    if (!email) { setMessage({ kind: "error", text: t.emailRequired }); return; }
+    setBusy("magic");
+    setMessage(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo },
+    });
+    setBusy(null);
+    if (error) setMessage({ kind: "error", text: error.message || t.authError });
+    else setMessage({ kind: "ok", text: t.magicSent });
+  };
+
   return (
     <div className="g-modal" onClick={onClose}>
       <div className="g-modal__panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
@@ -390,13 +452,52 @@ function SignInModal({ open, onClose, t }: { open: boolean; onClose: () => void;
         <div className="g-eyebrow">{t.modalEyebrow}</div>
         <h3 className="g-modal__h">{t.modalH}</h3>
         <p className="g-modal__p">{t.modalP}</p>
-        <div className="g-modal__auth">
-          <button className="g-btn g-btn--ink g-btn--lg" onClick={() => navigate("/auth")}>{t.continueGoogle}</button>
-          <button className="g-btn g-btn--outline g-btn--lg" onClick={() => navigate("/auth")}>{t.continueApple}</button>
-          <div className="g-modal__or"><span>{t.or}</span></div>
-          <input className="g-input" placeholder="your@email.com" />
-          <button className="g-btn g-btn--blue g-btn--lg" onClick={() => navigate("/auth")}>{t.sendMagic}</button>
+
+        <div className="g-oauth-row">
+          <button
+            className="g-btn g-oauth g-oauth--google"
+            onClick={() => oauth("google")}
+            disabled={busy !== null}
+          >
+            <GoogleGlyph size={16} />
+            <span>{busy === "google" ? t.connecting : t.continueGoogle}</span>
+          </button>
+          <button
+            className="g-btn g-oauth g-oauth--apple"
+            onClick={() => oauth("apple")}
+            disabled={busy !== null}
+          >
+            <AppleGlyph size={16} />
+            <span>{busy === "apple" ? t.connecting : t.continueApple}</span>
+          </button>
         </div>
+
+        <div className="g-modal__or"><span>{t.or}</span></div>
+
+        <div className="g-modal__auth">
+          <input
+            className="g-input"
+            placeholder="your@email.com"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
+          <button
+            className="g-btn g-btn--blue g-btn--lg"
+            onClick={magic}
+            disabled={busy !== null}
+          >
+            {busy === "magic" ? t.connecting : t.sendMagic}
+          </button>
+        </div>
+
+        {message && (
+          <div className={`g-modal__msg ${message.kind === "error" ? "is-error" : "is-ok"}`}>
+            {message.text}
+          </div>
+        )}
+
         <div className="g-modal__foot">{t.modalFoot}</div>
       </div>
     </div>

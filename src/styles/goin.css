@@ -612,6 +612,46 @@
 .g-input:focus { border-color: var(--blue); }
 .g-modal__foot { font-size: 11.5px; color: var(--ink-3); margin-top: 14px; text-align: center; line-height: 1.5; }
 
+/* OAuth row — side-by-side Google + Apple */
+.g-oauth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.g-oauth {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--g-radius-pill);
+  font-size: 13.5px; font-weight: 500;
+  border: 1px solid var(--line-2);
+  background: var(--surface); color: var(--ink);
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.g-oauth:hover:not(:disabled) { background: var(--bg-deep); border-color: var(--ink); }
+.g-oauth:disabled { opacity: .6; cursor: not-allowed; }
+.g-oauth--apple { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.g-oauth--apple:hover:not(:disabled) {
+  background: color-mix(in oklch, var(--ink) 88%, var(--blue));
+  border-color: color-mix(in oklch, var(--ink) 88%, var(--blue));
+}
+.g-oauth > span { line-height: 1; }
+
+@media (max-width: 420px) {
+  .g-oauth-row { grid-template-columns: 1fr; }
+}
+
+.g-modal__msg {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--g-radius-sm);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.g-modal__msg.is-error { background: oklch(0.95 0.08 25); color: oklch(0.40 0.18 25); }
+.g-modal__msg.is-ok { background: var(--blue-soft); color: var(--blue-ink); }
+
 /* MOBILE */
 .g-mfoot { padding: 0 16px 16px; }
 .g-card--m { padding: 16px; }
