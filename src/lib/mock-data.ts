@@ -29,15 +29,15 @@ export type ResultItem = {
 };
 
 const leisureSources: Source[] = [
-  { url: "kinomuranow.pl/repertuar", name: "Kino Muranów" },
+  { url: "kinomuranow.pl/repertuar", name: "Kino Muraów" },
   { url: "kinoteka.pl/repertuar/", name: "Kinoteka" },
-  { url: "iluzjon.fn.org.pl/repertuar/", name: "Kino Iluzjon" },
+  { url: "www.iluzjon.fn.org.pl/repertuar/", name: "Kino Iluzjon" },
+  { url: "teatrstudio.pl/pl/repertuar/", name: "Teatr Studio" },
   { url: "teatrdramatyczny.pl/repertuar", name: "Teatr Dramatyczny" },
-  { url: "powszechny.com/pl", name: "Teatr Powszechny" },
-  { url: "jassmine.com", name: "Jassmine Jazz Club" },
-  // Broken/unavailable sources:
-  // { url: "teatr-zydowski.pl", name: "Teatr Żydowski" },     // fails to scrape
-  // { url: "klubkomediowy.pl", name: "Klub Komediowy" },       // fails to scrape
+  { url: "powszechny.com/pl/repertuar", name: "Teatr Powszechny" },
+  { url: "trwarszawa.pl/repertuar", name: "TR Warszawa" },
+  { url: "komediowy.pl/", name: "Klub Komediowy" },
+  { url: "jassmine.com/koncerty/", name: "Klub Jassmine" },
 ];
 
 export const defaultFolders: Folder[] = [
@@ -81,7 +81,7 @@ const mockResults: Record<string, ResultItem[]> = {
     {
       title: "Anora",
       time: "17:00",
-      venue: "Kino Muranów",
+      venue: "Kino Muraów",
       date: todayStr(),
       description: "A young sex worker from Brooklyn gets her chance at a Cinderella story when she marries the son of a Russian oligarch. But when the news reaches Russia, her fairy tale is threatened.",
       director: "Sean Baker",
@@ -93,7 +93,7 @@ const mockResults: Record<string, ResultItem[]> = {
     {
       title: "The Brutalist",
       time: "19:30",
-      venue: "Kino Muranów",
+      venue: "Kino Muraów",
       date: todayStr(),
       description: "A visionary architect escapes post-war Europe and arrives in America to rebuild his life. When a wealthy client recognizes his talent, an obsessive and destructive relationship develops.",
       director: "Brady Corbet",
@@ -151,41 +151,29 @@ const mockResults: Record<string, ResultItem[]> = {
       sourceUrl: "https://teatrpowszechny.pl",
     },
     {
-      title: "Dybuk — spektakl",
-      time: "19:00",
-      venue: "Teatr Żydowski",
-      date: todayStr(),
-      description: "A haunting stage production based on S. Ansky's classic play about love, death, and possession in a Jewish shtetl. A young bride is possessed by the spirit of her dead beloved.",
-      director: "Anna Smolar",
-      cast: "Teatr Żydowski ensemble",
-      duration: "120 min",
-      genre: "Theatre / Drama",
-      sourceUrl: "https://teatr-zydowski.pl",
-    },
-    {
       title: "Stand-up open mic",
       time: "20:30",
       venue: "Klub Komediowy",
       date: todayStr(),
       description: "An open mic night where new and experienced comedians take the stage for 5-minute sets. Expect fresh jokes, surprising stories, and the occasional heckler.",
       genre: "Stand-up / Comedy",
-      sourceUrl: "https://klubkomediowy.pl",
+      sourceUrl: "https://komediowy.pl",
     },
     {
       title: "Jazz jam session",
       time: "21:00",
-      venue: "Jassmine Jazz Club",
+      venue: "Klub Jassmine",
       date: todayStr(),
       description: "An open jam session where local jazz musicians gather for an evening of improvised sets. Bring your instrument or just enjoy the music with a drink.",
       genre: "Jazz / Live Music",
-      sourceUrl: "https://jassmine.pl",
+      sourceUrl: "https://jassmine.com",
     },
   ],
   tomorrow: [
     {
       title: "Emilia Pérez",
       time: "17:30",
-      venue: "Kino Muranów",
+      venue: "Kino Muraów",
       date: tomorrowStr(),
       description: "A Mexican cartel leader seeks the help of a lawyer to fake his death and transition into the woman he has always wanted to be. A musical crime drama unlike any other.",
       director: "Jacques Audiard",
@@ -237,23 +225,23 @@ const mockResults: Record<string, ResultItem[]> = {
       date: tomorrowStr(),
       description: "An evening of fully improvised comedy sketches based on audience suggestions. Two teams compete for laughs in a fast-paced improv battle.",
       genre: "Improv / Comedy",
-      sourceUrl: "https://klubkomediowy.pl",
+      sourceUrl: "https://komediowy.pl",
     },
     {
       title: "Nina Simone Tribute",
       time: "20:30",
-      venue: "Jassmine Jazz Club",
+      venue: "Klub Jassmine",
       date: tomorrowStr(),
       description: "A live tribute concert celebrating the music of Nina Simone — from 'Feeling Good' to 'Sinnerman'. Performed by a Warsaw-based jazz quartet with guest vocalist.",
       genre: "Jazz / Live Music",
-      sourceUrl: "https://jassmine.pl",
+      sourceUrl: "https://jassmine.com",
     },
   ],
   next3days: [
     {
       title: "Anora",
       time: "17:00",
-      venue: "Kino Muranów",
+      venue: "Kino Muraów",
       date: todayStr(),
       description: "A young sex worker from Brooklyn gets her chance at a Cinderella story when she marries the son of a Russian oligarch. But when the news reaches Russia, her fairy tale is threatened.",
       director: "Sean Baker",
@@ -265,7 +253,7 @@ const mockResults: Record<string, ResultItem[]> = {
     {
       title: "The Brutalist",
       time: "19:30",
-      venue: "Kino Muranów",
+      venue: "Kino Muraów",
       date: todayStr(),
       description: "A visionary architect escapes post-war Europe and arrives in America to rebuild his life.",
       director: "Brady Corbet",
@@ -289,7 +277,7 @@ const mockResults: Record<string, ResultItem[]> = {
     {
       title: "Emilia Pérez",
       time: "17:30",
-      venue: "Kino Muranów",
+      venue: "Kino Muraów",
       date: tomorrowStr(),
       description: "A Mexican cartel leader seeks the help of a lawyer to fake his death and transition into the woman he has always wanted to be.",
       director: "Jacques Audiard",
@@ -365,16 +353,16 @@ const mockResults: Record<string, ResultItem[]> = {
       date: day3Str(2),
       description: "One of Poland's sharpest stand-up comedians performs a full hour of new material about modern life, relationships, and growing up in a small town.",
       genre: "Stand-up / Comedy",
-      sourceUrl: "https://klubkomediowy.pl",
+      sourceUrl: "https://komediowy.pl",
     },
     {
       title: "Latin Jazz Night",
       time: "21:00",
-      venue: "Jassmine Jazz Club",
+      venue: "Klub Jassmine",
       date: day3Str(2),
       description: "An evening of Afro-Cuban rhythms, bossa nova grooves, and Latin jazz standards performed by a live quintet. Dancing encouraged.",
       genre: "Jazz / Latin",
-      sourceUrl: "https://jassmine.pl",
+      sourceUrl: "https://jassmine.com",
     },
   ],
 };
