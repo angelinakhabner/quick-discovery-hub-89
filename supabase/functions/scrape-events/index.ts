@@ -113,7 +113,7 @@ function isSpecificDetailPage(url: string): boolean {
 
 async function fetchDescriptionFromPage(url: string): Promise<string | undefined> {
   try {
-    const html = await fetchHtml(url);
+    const html = await fetchHtml(url, 6000);
     if (!html) return undefined;
     const match =
       html.match(/<meta\s+name=["']description["']\s+content=["']([^"']{20,})["']/i) ||
@@ -157,10 +157,11 @@ function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'gener
   return 'generic';
 }
 
-async function fetchHtml(url: string): Promise<string | null> {
+async function fetchHtml(url: string, timeoutMs: number = 20000): Promise<string | null> {
+  const startedAt = Date.now();
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -168,15 +169,20 @@ async function fetchHtml(url: string): Promise<string | null> {
         'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
       },
       signal: controller.signal,
+      redirect: 'follow',
     });
     clearTimeout(timeout);
+    const elapsed = Date.now() - startedAt;
     if (!response.ok) {
-      console.error(`Fetch failed for ${url}: ${response.status}`);
+      console.error(`Fetch failed for ${url}: ${response.status} (${elapsed}ms)`);
       return null;
     }
-    return await response.text();
+    const text = await response.text();
+    console.log(`Fetched ${url}: ${text.length} bytes in ${Date.now() - startedAt}ms`);
+    return text;
   } catch (err) {
-    console.error(`Fetch threw for ${url}:`, err instanceof Error ? err.message : err);
+    const elapsed = Date.now() - startedAt;
+    console.error(`Fetch threw for ${url} after ${elapsed}ms (timeout=${timeoutMs}ms):`, err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -376,6 +382,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log(`Request: source="${source.name}" url="${source.url}" filter="${filter}"`);
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -445,11 +453,14 @@ Deno.serve(async (req) => {
     const pageText = html
       .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, '')
+      .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, '')
       .replace(/<[^>]+>/g, ' ')
       .replace(/&[a-z#0-9]+;/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .slice(0, 12000);
+      .slice(0, 20000);
+    console.log(`Page text for ${source.name}: ${pageText.length} chars`);
 
     const { start, end } = getDateRangeForFilter(filter);
     const dateDescription = buildDateDescription(filter);
