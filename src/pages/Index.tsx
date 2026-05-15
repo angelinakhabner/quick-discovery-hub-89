@@ -87,9 +87,8 @@ const Index = () => {
         },
         controller.signal
       );
-      if (!controller.signal.aborted && result.data.length > 0) {
-        cache.current[cacheKey] = result.data;
-        setResults(result.data);
+      if (!controller.signal.aborted) {
+        if (result.data.length > 0) cache.current[cacheKey] = result.data;
       }
       if (result.errors.length > 0) {
         console.warn("Some sources had errors:", result.errors);

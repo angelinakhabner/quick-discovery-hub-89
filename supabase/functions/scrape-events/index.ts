@@ -147,6 +147,30 @@ async function enrichWithDescriptions(events: ScrapedEvent[]): Promise<ScrapedEv
   );
 }
 
+/** Fix commonly-saved old/short URLs to their actual repertuar pages. */
+function normalizeSourceUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    const path = u.pathname;
+    if ((host === 'kinomuranow.pl' || host === 'www.kinomuranow.pl') && (path === '/' || path === '')) {
+      return 'https://kinomuranow.pl/repertuar';
+    }
+    if (host === 'iluzjon.fn.org.pl') {
+      return 'https://www.iluzjon.fn.org.pl/repertuar/';
+    }
+    if ((host === 'jassmine.com' || host === 'www.jassmine.com') && (path === '/' || path === '')) {
+      return 'https://jassmine.com/koncerty/';
+    }
+    if ((host === 'powszechny.com' || host === 'www.powszechny.com') && !path.includes('repertuar')) {
+      return 'https://powszechny.com/pl/repertuar';
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
+
 function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'generic' {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
@@ -155,6 +179,12 @@ function getSourceType(url: string): 'kinoteka' | 'muranow' | 'iluzjon' | 'gener
     if (hostname.includes('iluzjon.fn.org.pl')) return 'iluzjon';
   } catch {}
   return 'generic';
+}
+
+/** Extract embedded JSON payload from Next.js SSR pages (<script id="__NEXT_DATA__">). */
+function extractNextJsData(html: string): string | null {
+  const m = html.match(/<script\s+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
+  return m ? m[1].trim() : null;
 }
 
 async function fetchHtml(url: string, timeoutMs: number = 20000): Promise<string | null> {
@@ -392,6 +422,7 @@ Deno.serve(async (req) => {
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = `https://${formattedUrl}`;
     }
+    formattedUrl = normalizeSourceUrl(formattedUrl);
 
     const sourceType = getSourceType(formattedUrl);
 
@@ -450,19 +481,34 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`HTML_SNIPPET[${source.name}]: ${html.slice(0, 3000)}`);
+    // For Next.js SSR pages the useful content is in __NEXT_DATA__ JSON, not the stripped HTML
+    const nextData = extractNextJsData(html);
+    let pageText: string;
+    if (nextData) {
+      console.log(`Using __NEXT_DATA__ for ${source.name} (${nextData.length} chars)`);
+      pageText = nextData.slice(0, 20000);
+    } else {
+      pageText = html
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, '')
+        .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&[a-z#0-9]+;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 20000);
+      console.log(`Page text for ${source.name}: ${pageText.length} chars`);
+    }
 
-    const pageText = html
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, '')
-      .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&[a-z#0-9]+;/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 20000);
-    console.log(`Page text for ${source.name}: ${pageText.length} chars`);
+    // If page is nearly empty (JS-rendered with no embedded data), skip the Claude call
+    if (pageText.length < 2000) {
+      console.log(`Skipping Claude for ${source.name}: page text too short (${pageText.length} chars) — likely JS-rendered`);
+      return new Response(
+        JSON.stringify({ success: true, data: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const { start, end } = getDateRangeForFilter(filter);
     const dateDescription = buildDateDescription(filter);
@@ -484,7 +530,7 @@ Deno.serve(async (req) => {
           max_tokens: 2000,
           messages: [{
             role: 'user',
-            content: `Extract events from this webpage. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\nWebpage text:\n${pageText}`,
+            content: `Extract events from this ${nextData ? 'Next.js page data (JSON)' : 'webpage'}. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\n${nextData ? 'Page data (JSON):' : 'Webpage text:'}\n${pageText}`,
           }],
         }),
       });
