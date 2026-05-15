@@ -153,6 +153,9 @@ function normalizeSourceUrl(url: string): string {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
     const path = u.pathname;
+    if ((host === 'kinoteka.pl' || host === 'www.kinoteka.pl') && !path.includes('repertuar')) {
+      return 'https://kinoteka.pl/repertuar/';
+    }
     if ((host === 'kinomuranow.pl' || host === 'www.kinomuranow.pl') && (path === '/' || path === '')) {
       return 'https://kinomuranow.pl/repertuar';
     }
