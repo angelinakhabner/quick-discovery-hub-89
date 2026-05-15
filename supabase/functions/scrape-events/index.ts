@@ -153,6 +153,9 @@ function normalizeSourceUrl(url: string): string {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
     const path = u.pathname;
+    if ((host === 'kinoteka.pl' || host === 'www.kinoteka.pl') && !path.includes('repertuar')) {
+      return 'https://kinoteka.pl/repertuar/';
+    }
     if ((host === 'kinomuranow.pl' || host === 'www.kinomuranow.pl') && (path === '/' || path === '')) {
       return 'https://kinomuranow.pl/repertuar';
     }
@@ -334,7 +337,15 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
   const currentYear = warsawDate.getUTCFullYear();
   const events: ScrapedEvent[] = [];
 
-  const parts = html.split(/<h3>(\d+)\s+(\w+)\s*-\s*\w+<\/h3>/i);
+  // Log sample tags so we can diagnose if the regex still doesn't match
+  const h3Sample = html.match(/<h3[^>]*>[^<]{0,100}<\/h3>/gi)?.slice(0, 4);
+  console.log(`Iluzjon h3 tags: ${JSON.stringify(h3Sample)}`);
+  const spanSample = html.match(/<span[^>]*class="[^"]*hour[^"]*"[^>]*>[\s\S]{0,120}/gi)?.slice(0, 3);
+  console.log(`Iluzjon hour spans: ${JSON.stringify(spanSample)}`);
+
+  // Allow h3 with any attributes; À-ɏ covers Polish/Latin Extended characters in month names
+  const parts = html.split(/<h3[^>]*>\s*(\d+)\s+([\wÀ-ɏ]+)[^<]*<\/h3>/i);
+  console.log(`Iluzjon: split into ${parts.length} parts`);
 
   for (let i = 1; i + 2 < parts.length; i += 3) {
     const dayNum = Number(parts[i]);
@@ -347,7 +358,8 @@ function parseIluzjonEventsFromHtml(html: string, sourceName: string, filter: st
     const isoDate = `${currentYear}-${String(monthNum + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     if (isoDate < start || isoDate > end) continue;
 
-    const eventRegex = /<span class="hour"><a href="([^"]+)">(\d{2}:\d{2})\s*-\s*([^<]+)<\/a><\/span>/g;
+    // Allow any attributes on span; accept en-dash (–) or hyphen between time and title
+    const eventRegex = /<span[^>]*class="[^"]*hour[^"]*"[^>]*>\s*<a href="([^"]+)">(\d{2}:\d{2})\s*[-–]\s*([^<]+)<\/a>/g;
     let em;
     while ((em = eventRegex.exec(content)) !== null) {
       const rawUrl = em[1];
