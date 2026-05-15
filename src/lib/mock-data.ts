@@ -31,7 +31,7 @@ export type ResultItem = {
 const leisureSources: Source[] = [
   { url: "kinomuranow.pl/repertuar", name: "Kino Muraów" },
   { url: "kinoteka.pl/repertuar/", name: "Kinoteka" },
-  { url: "www.iluzjon.fn.org.pl/repertuar/", name: "Kino Iluzjon" },
+  { url: "www.iluzjon.fn.org.pl/repertuar.html", name: "Kino Iluzjon" },
   { url: "teatrstudio.pl/pl/repertuar/", name: "Teatr Studio" },
   { url: "teatrdramatyczny.pl/repertuar", name: "Teatr Dramatyczny" },
   { url: "powszechny.com/pl/repertuar", name: "Teatr Powszechny" },
