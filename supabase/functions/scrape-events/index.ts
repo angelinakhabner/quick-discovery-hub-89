@@ -156,8 +156,8 @@ function normalizeSourceUrl(url: string): string {
     if ((host === 'kinomuranow.pl' || host === 'www.kinomuranow.pl') && (path === '/' || path === '')) {
       return 'https://kinomuranow.pl/repertuar';
     }
-    if (host === 'iluzjon.fn.org.pl') {
-      return 'https://www.iluzjon.fn.org.pl/repertuar/';
+    if (host.includes('iluzjon.fn.org.pl')) {
+      return 'https://www.iluzjon.fn.org.pl/repertuar.html';
     }
     if ((host === 'jassmine.com' || host === 'www.jassmine.com') && (path === '/' || path === '')) {
       return 'https://jassmine.com/koncerty/';
@@ -166,6 +166,23 @@ function normalizeSourceUrl(url: string): string {
       return 'https://powszechny.com/pl/repertuar';
     }
     return url;
+  } catch {
+    return url;
+  }
+}
+
+/** Append ?miesiac=YYYY-MM to Teatr Powszechny URLs based on the active filter. */
+function addPowszechnyMonth(url: string, filter: string): string {
+  try {
+    const u = new URL(url);
+    if (u.hostname !== 'powszechny.com' && u.hostname !== 'www.powszechny.com') return url;
+    if (u.searchParams.has('miesiac')) return url;
+    const today = getWarsawDateOnly();
+    const target = filter === 'nextmonth'
+      ? new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 1))
+      : today;
+    u.searchParams.set('miesiac', `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, '0')}`);
+    return u.toString();
   } catch {
     return url;
   }
@@ -423,6 +440,7 @@ Deno.serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
     formattedUrl = normalizeSourceUrl(formattedUrl);
+    formattedUrl = addPowszechnyMonth(formattedUrl, filter);
 
     const sourceType = getSourceType(formattedUrl);
 
@@ -481,7 +499,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // For Next.js SSR pages the useful content is in __NEXT_DATA__ JSON, not the stripped HTML
     const nextData = extractNextJsData(html);
     let pageText: string;
     if (nextData) {
@@ -501,7 +518,6 @@ Deno.serve(async (req) => {
       console.log(`Page text for ${source.name}: ${pageText.length} chars`);
     }
 
-    // If page is nearly empty (JS-rendered with no embedded data), skip the Claude call
     if (pageText.length < 2000) {
       console.log(`Skipping Claude for ${source.name}: page text too short (${pageText.length} chars) — likely JS-rendered`);
       return new Response(
