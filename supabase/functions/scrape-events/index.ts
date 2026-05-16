@@ -207,6 +207,57 @@ function extractNextJsData(html: string): string | null {
   return m ? m[1].trim() : null;
 }
 
+/**
+ * Extract useful JSON data from script tags when __NEXT_DATA__ isn't present.
+ * Tries JSON-LD, then common state variable patterns, then the largest JSON blob.
+ * Returns null if nothing useful is found.
+ */
+function extractEmbeddedJson(html: string): string | null {
+  // 1. JSON-LD structured data (schema.org events etc.)
+  const jsonLdBlocks: string[] = [];
+  const jsonLdRe = /<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = jsonLdRe.exec(html)) !== null) {
+    const blob = m[1].trim();
+    if (blob.length > 100) jsonLdBlocks.push(blob);
+  }
+  if (jsonLdBlocks.length > 0) {
+    const combined = jsonLdBlocks.join('\n');
+    console.log(`Found ${jsonLdBlocks.length} JSON-LD block(s), ${combined.length} chars`);
+    return combined.slice(0, 20000);
+  }
+
+  // 2. Common SSR state variable patterns
+  const statePatterns = [
+    /window\.__(?:INITIAL|PRELOADED|APP|NUXT|REDUX)_STATE__\s*=\s*(\{[\s\S]{200,}?\});?\s*<\/script>/i,
+    /window\.__STATE__\s*=\s*(\{[\s\S]{200,}?\});?\s*<\/script>/i,
+    /__APOLLO_STATE__\s*=\s*(\{[\s\S]{200,}?\});?\s*<\/script>/i,
+  ];
+  for (const pattern of statePatterns) {
+    const sm = html.match(pattern);
+    if (sm) {
+      console.log(`Found SSR state variable, ${sm[1].length} chars`);
+      return sm[1].slice(0, 20000);
+    }
+  }
+
+  // 3. Largest JSON blob in any script tag (≥2000 chars — likely contains real data)
+  const scriptRe = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+  let largest = '';
+  while ((m = scriptRe.exec(html)) !== null) {
+    const content = m[1].trim();
+    if (content.startsWith('{') || content.startsWith('[')) {
+      if (content.length > largest.length) largest = content;
+    }
+  }
+  if (largest.length >= 2000) {
+    console.log(`Using largest JSON script blob: ${largest.length} chars`);
+    return largest.slice(0, 20000);
+  }
+
+  return null;
+}
+
 async function fetchHtml(url: string, timeoutMs: number = 20000): Promise<string | null> {
   const startedAt = Date.now();
   try {
@@ -512,11 +563,19 @@ Deno.serve(async (req) => {
     }
 
     const nextData = extractNextJsData(html);
+    const embeddedJson = nextData ? null : extractEmbeddedJson(html);
     let pageText: string;
+    let dataSource: string;
     if (nextData) {
-      console.log(`Using __NEXT_DATA__ for ${source.name} (${nextData.length} chars)`);
+      dataSource = 'Next.js page data (JSON)';
       pageText = nextData.slice(0, 20000);
+      console.log(`Using __NEXT_DATA__ for ${source.name} (${pageText.length} chars)`);
+    } else if (embeddedJson) {
+      dataSource = 'embedded JSON data';
+      pageText = embeddedJson.slice(0, 20000);
+      console.log(`Using embedded JSON for ${source.name} (${pageText.length} chars)`);
     } else {
+      dataSource = 'webpage';
       pageText = html
         .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -558,7 +617,7 @@ Deno.serve(async (req) => {
           max_tokens: 2000,
           messages: [{
             role: 'user',
-            content: `Extract events from this ${nextData ? 'Next.js page data (JSON)' : 'webpage'}. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\n${nextData ? 'Page data (JSON):' : 'Webpage text:'}\n${pageText}`,
+            content: `Extract events from this ${dataSource}. Return only valid JSON, no markdown fences.\n\nSource URL: ${formattedUrl}\nDate range: ${dateDescription} (${start} to ${end})${afterTime ? `\nOnly include events starting at or after ${afterTime}.` : ''}${promptHint ? `\nContext: ${promptHint}` : ''}\n\nRules:\n1. Only include events whose date falls within ${start} to ${end}. Exclude everything else.\n2. Time format: HH:MM (24-hour). Read times exactly as shown — never invent them.\n3. If a show has multiple times (e.g. 14:30, 17:30), create a SEPARATE entry for each.\n4. If no events match, return {"events":[]}.\n5. Description: 2-3 sentence synopsis from the page. Polish sites → Polish. Others → English. Never invent.\n6. Link: direct URL to the specific event page if visible, otherwise omit.\n\nReturn this exact JSON shape:\n{"events":[{"title":"","time":"HH:MM","date":"DD month","description":"","director":"","cast":"","duration":"","genre":"","link":""}]}\n\nData:\n${pageText}`,
           }],
         }),
       });
